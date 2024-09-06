@@ -5,6 +5,7 @@ import "@/styles/globals.css";
 import Navbar from "@/components/Navbar";
 import Footnav from "@/components/Footnav";
 import { ThemeProvider } from "@/components/theme-provider";
+import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import { usePathname } from "next/navigation";
 
 const geistSans = localFont({
@@ -40,9 +41,11 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <div className="min-h-screen bg-background font-sans antialiased flex flex-col">
-            {!dissableNav.includes(pathname) && <Navbar />}
-            <div className="flex-grow overflow-y">{children}</div>
-            {!dissableNav.includes(pathname) && <Footnav />}
+            <SessionProviderWrapper>
+              {!dissableNav.includes(pathname) && <Navbar />}
+              <div className="flex-grow">{children}</div>
+              {!dissableNav.includes(pathname) && <Footnav />}
+            </SessionProviderWrapper>
           </div>
         </ThemeProvider>
       </body>

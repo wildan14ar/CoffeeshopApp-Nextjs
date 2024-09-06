@@ -1,23 +1,35 @@
+import Link from "next/link";
+
 import { FaHome, FaBox, FaStore, FaUser } from "react-icons/fa";
 import { CiMemoPad } from "react-icons/ci";
 
 export default function Footnav() {
   return (
-    <ul className="md:hidden flex flex-row items-center justify-between p-3 bg-green-600">
+    <ul className="sticky bottom-0 md:hidden flex flex-row items-center justify-between p-3 bg-green-600">
       <li className="text-2xl">
-        <FaHome title="Home" />
+        <Link href="/">
+          <FaHome title="Home" />
+        </Link>
       </li>
       <li className="text-2xl">
-        <FaBox title="Products" />
+        <Link href="/products">
+          <FaBox title="Products" />
+        </Link>
       </li>
       <li className="text-2xl">
-        <CiMemoPad title="Order" />
+        <Link href="/order">
+          <CiMemoPad title="Order" />
+        </Link>
       </li>
       <li className="text-2xl">
-        <FaStore title="Store" />
+        <Link href="/store">
+          <FaStore title="Store" />
+        </Link>
       </li>
       <li className="text-2xl">
-        <FaUser title="Account" />
+        <Link href="/profile">
+          <FaUser title="Profile" />
+        </Link>
       </li>
     </ul>
   );
