@@ -7,6 +7,8 @@ import Footnav from "@/components/Footnav";
 import { ThemeProvider } from "@/components/theme-provider";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import { usePathname } from "next/navigation";
+import { Provider } from "react-redux";
+import store from "./store";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -40,13 +42,15 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="min-h-screen bg-background font-sans antialiased flex flex-col">
-            <SessionProviderWrapper>
-              {!dissableNav.includes(pathname) && <Navbar />}
-              <div className="flex-grow">{children}</div>
-              {!dissableNav.includes(pathname) && <Footnav />}
-            </SessionProviderWrapper>
-          </div>
+          <Provider store={store}>
+            <div className="min-h-screen bg-background font-sans antialiased flex flex-col">
+              <SessionProviderWrapper>
+                {!dissableNav.includes(pathname) && <Navbar />}
+                <div className="flex-grow">{children}</div>
+                {!dissableNav.includes(pathname) && <Footnav />}
+              </SessionProviderWrapper>
+            </div>
+          </Provider>
         </ThemeProvider>
       </body>
     </html>

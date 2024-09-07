@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
 import { useState } from "react";
-import { useRouter } from "next/router";
-import bcrypt from "bcryptjs";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -30,35 +30,51 @@ export default function Register() {
     if (data.error) {
       setError(data.error);
     } else {
-      router.push("/auth/signin");
+      router.push("/login");
     }
   };
 
   return (
-    <div>
-      <h1>Register</h1>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <form onSubmit={handleSubmit}>
+    <div className="w-full h-full flex flex-col justify-center items-center p-6">
+      <h1 className="text-4xl font-extrabold mb-6">Register to Acount</h1>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
+      <form
+        onSubmit={handleSubmit}
+      >
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Name"
+          className="w-full max-w-sm p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email"
+          className="w-full max-w-sm p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"
+          className="w-full max-w-sm p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <button type="submit">Register</button>
+        <button
+          type="submit"
+          className="w-full max-w-sm p-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition-colors"
+        >
+          Register
+        </button>
       </form>
+      <button
+        onClick={() => signIn("google")}
+        className="w-full max-w-sm p-3 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-colors"
+      >
+        Sign in with Google
+      </button>
     </div>
   );
 }
