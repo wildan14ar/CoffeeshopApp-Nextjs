@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -35,11 +34,12 @@ export default function Register() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col justify-center items-center p-6">
+    <div className="w-full">
       <h1 className="text-4xl font-extrabold mb-6">Register to Acount</h1>
       {error && <p className="text-red-500 mb-4">{error}</p>}
       <form
         onSubmit={handleSubmit}
+        className="flex flex-col gap-2"
       >
         <input
           type="text"
@@ -69,12 +69,6 @@ export default function Register() {
           Register
         </button>
       </form>
-      <button
-        onClick={() => signIn("google")}
-        className="w-full max-w-sm p-3 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-colors"
-      >
-        Sign in with Google
-      </button>
     </div>
   );
 }

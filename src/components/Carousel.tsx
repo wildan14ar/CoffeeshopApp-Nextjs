@@ -59,6 +59,10 @@ export default function Carousel() {
 
   return (
     <div className="relative overflow-hidden py-3">
+      <div className="flex flex-row justify-between items-center text-sm px-2 pt-2">
+        <span>Programs and Promotions</span>
+        <span className="font-bold">See all</span>
+      </div>
       <motion.div
         drag="x"
         dragConstraints={{

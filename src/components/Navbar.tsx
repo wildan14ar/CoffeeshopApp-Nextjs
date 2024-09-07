@@ -1,4 +1,4 @@
-import { FaShoppingBag, FaUser } from "react-icons/fa";
+import { FaUser } from "react-icons/fa";
 import { BiSolidCoffeeBean } from "react-icons/bi";
 import ButtonTheme from "@/components/atoms/ButtonTheme";
 
@@ -14,9 +14,6 @@ export default function Navbar() {
         <li>Store</li>
       </ul>
       <ul className="flex flex-row gap-3">
-        <li className="text-2xl">
-          <FaShoppingBag title="Order" />
-        </li>
         <li className="hidden md:block text-2xl">
           <FaUser title="Account" />
         </li>
