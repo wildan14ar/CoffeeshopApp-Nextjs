@@ -1,11 +1,11 @@
-import NextAuth from "next-auth";
+import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
-const handler = NextAuth({
+export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
@@ -19,17 +19,29 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+        
         const user = await prisma.user.findUnique({
-          where: { email: credentials?.email }
+          where: { email: credentials.email }
         });
 
-        if (user && user.hashedPassword) {
-          const isValidPassword = await bcrypt.compare(credentials?.password, user.hashedPassword);
-          if (isValidPassword) {
-            return user;
-          }
+        if (!user || !user.hashedPassword) {
+          return null;
         }
-        return null;
+
+        const isValidPassword = await bcrypt.compare(credentials.password, user.hashedPassword);
+        
+        if (!isValidPassword) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        };
       }
     })
   ],
@@ -38,8 +50,8 @@ const handler = NextAuth({
   },
   callbacks: {
     async session({ session, token }) {
-      if (token) {
-        session.id = token.id;
+      if (session.user) {
+        session.user.id = token.id as string;
       }
       return session;
     },
@@ -50,7 +62,13 @@ const handler = NextAuth({
       return token;
     }
   },
+  pages: {
+    signIn: '/auth/signin',
+    // Add other custom pages if needed
+  },
   secret: process.env.NEXTAUTH_SECRET,
-});
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

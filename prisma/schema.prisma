@@ -9,8 +9,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  directUrl         = env("DIRECT_URL")
 }
 
 model User {
@@ -60,4 +61,32 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Products {
+  id            Int     @id @default(autoincrement())
+  name          String
+  price         Int
+  stock         Int
+  description   String?
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now())
+}
+
+model Order {
+  id            Int     @id @default(autoincrement())
+  userId        String
+  productsId    Int
+  quantity      Int
+  total         Int
+  status        String
+  address       String
+  paymentMethod String
+  paymentDate   DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productsId], references: [id])
 }

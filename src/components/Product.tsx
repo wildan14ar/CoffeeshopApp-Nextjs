@@ -1,5 +1,5 @@
 import React from "react";
-import { AiOutlineHeart, AiOutlinePlus } from "react-icons/ai"; // Example icons
+import { AiOutlineHeart } from "react-icons/ai"; // Example icons
 
 interface ProductCardProps {
   product: {
@@ -31,7 +31,6 @@ const Product: React.FC<ProductCardProps> = ({ product }) => {
       {/* Icons */}
       <div className="flex items-center space-x-4 text-gray-400">
         <AiOutlineHeart className="w-5 h-5 hover:text-red-500 cursor-pointer" />
-        <AiOutlinePlus className="w-5 h-5 hover:text-gray-600 cursor-pointer" />
       </div>
     </div>
   );
