@@ -1,7 +1,22 @@
+"use client"
+
 import Product from "@/components/Product";
-import { products } from "@/sample";
+// import { products } from "@/sample";
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchProducts } from '@/features/productSlice';
 
 export default function ProductsPage() {
+  const dispatch = useDispatch();
+  const { products, loading, error } = useSelector(state => state.product);
+
+  useEffect(() => {
+    dispatch(fetchProducts());
+  }, [dispatch]);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
+
   return (
     <div className="w-full h-full flex flex-col">
       <ul className="flex flex-row border-b-2 border-slate-200 p-2 justify-around items-center">

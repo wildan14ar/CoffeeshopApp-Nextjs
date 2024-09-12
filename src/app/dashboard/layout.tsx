@@ -5,7 +5,7 @@ export default function DashboardLayout({
 }) {
   return (
     <div>
-      <h1>Dashboard</h1>
+      <h1 className="text-center font-bold py-2">Dashboard</h1>
       {children}
     </div>
   );

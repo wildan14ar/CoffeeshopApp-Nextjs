@@ -63,30 +63,66 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-model Products {
-  id            Int     @id @default(autoincrement())
-  name          String
-  price         Int
-  stock         Int
-  description   String?
-  image         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @default(now())
+model Product {
+  id          Int          @id @default(autoincrement())
+  name        String
+  description String?
+  base_price  Float
+  image_url   String?
+  options     ProductOption[]
+  orderItems  OrderItem[]   // Relasi berlawanan dengan OrderItem
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model ProductOption {
+  id          Int                @id @default(autoincrement())
+  name        String
+  product     Product             @relation(fields: [productId], references: [id])
+  productId   Int
+  values      ProductOptionValue[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model ProductOptionValue {
+  id             Int                 @id @default(autoincrement())
+  value          String
+  additional_price Float              @default(0.00)
+  option         ProductOption        @relation(fields: [optionId], references: [id])
+  optionId       Int
+  orderItemOptions OrderItemOption[]  // Relasi berlawanan dengan OrderItemOption
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
 }
 
 model Order {
-  id            Int     @id @default(autoincrement())
-  userId        String
-  productsId    Int
-  quantity      Int
-  total         Int
-  status        String
-  address       String
-  paymentMethod String
-  paymentDate   DateTime
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @default(now())
+  id          Int          @id @default(autoincrement())
+  customer_name String
+  total_price Float
+  status      String       @default("pending")
+  items       OrderItem[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
 
-  user   User   @relation(fields: [userId], references: [id])
-  product Product @relation(fields: [productsId], references: [id])
+model OrderItem {
+  id          Int         @id @default(autoincrement())
+  order       Order       @relation(fields: [orderId], references: [id])
+  orderId     Int
+  product     Product     @relation(fields: [productId], references: [id])
+  productId   Int
+  quantity    Int         @default(1)
+  price       Float
+  options     OrderItemOption[]
+  createdAt   DateTime    @default(now())
+}
+
+model OrderItemOption {
+  id             Int               @id @default(autoincrement())
+  orderItem      OrderItem         @relation(fields: [orderItemId], references: [id])
+  orderItemId    Int
+  optionValue    ProductOptionValue @relation(fields: [optionValueId], references: [id])
+  optionValueId  Int
+  additional_price Float            @default(0.00)
 }
