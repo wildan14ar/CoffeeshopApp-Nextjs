@@ -1,8 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// Prisma schema
 
 generator client {
   provider = "prisma-client-js"
@@ -14,6 +10,13 @@ datasource db {
   directUrl         = env("DIRECT_URL")
 }
 
+enum UserRole {
+  USER
+  OWNER
+  MANAGER
+}
+
+// Model User
 model User {
   id            String   @id @default(cuid())
   name          String?
@@ -25,8 +28,11 @@ model User {
   updatedAt     DateTime @updatedAt
   accounts      Account[]
   sessions      Session[]
+  stores        Store[]
+  role          UserRole @default(USER)
 }
 
+// Model Account
 model Account {
   id                 String  @id @default(cuid())
   userId             String
@@ -46,6 +52,7 @@ model Account {
   @@unique([provider, providerAccountId])
 }
 
+// Model Session
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique
@@ -55,6 +62,7 @@ model Session {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// Model VerificationToken
 model VerificationToken {
   identifier String
   token      String      @unique
@@ -63,6 +71,34 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+// Model Store
+model Store {
+  id          Int          @id @default(autoincrement())
+  name        String
+  description String?
+  address     String?
+  phone       String?
+  email       String?
+  image_url   String?
+  user        User         @relation(fields: [userId], references: [id])
+  userId      String
+  details     StoreDetails?
+  products    Product[]
+}
+
+// Model StoreDetails
+model StoreDetails {
+  id          Int         @id @default(autoincrement())
+  latitude    Float?
+  longitude   Float?
+  whatsapp    String?
+  instagram   String?
+  facebook    String?
+  storeId     Int         @unique
+  store       Store       @relation(fields: [storeId], references: [id]) 
+}
+
+// Model Product
 model Product {
   id          Int          @id @default(autoincrement())
   name        String
@@ -70,11 +106,15 @@ model Product {
   base_price  Float
   image_url   String?
   options     ProductOption[]
-  orderItems  OrderItem[]   // Relasi berlawanan dengan OrderItem
+  orderItems  OrderItem[]
+  cartItems   CartItem[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  store       Store         @relation(fields: [storeId], references: [id])
+  storeId     Int
 }
 
+// Model ProductOption
 model ProductOption {
   id          Int                @id @default(autoincrement())
   name        String
@@ -85,39 +125,65 @@ model ProductOption {
   updatedAt   DateTime            @updatedAt
 }
 
+// Model ProductOptionValue
 model ProductOptionValue {
   id             Int                 @id @default(autoincrement())
   value          String
   additional_price Float              @default(0.00)
   option         ProductOption        @relation(fields: [optionId], references: [id])
   optionId       Int
-  orderItemOptions OrderItemOption[]  // Relasi berlawanan dengan OrderItemOption
+  orderItemOptions OrderItemOption[]  // Relasi ke OrderItemOption
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
 }
 
+// Model Cart
+model Cart {
+  id          Int          @id @default(autoincrement())
+  userId      Int?
+  items       CartItem[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// Model CartItem
+model CartItem {
+  id          Int          @id @default(autoincrement())
+  cart        Cart         @relation(fields: [cartId], references: [id])
+  cartId      Int
+  product     Product      @relation(fields: [productId], references: [id])
+  productId   Int
+  quantity    Int          @default(1)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// Model Order
 model Order {
   id          Int          @id @default(autoincrement())
-  customer_name String
-  total_price Float
-  status      String       @default("pending")
+  userId      Int?
+  totalPrice  Float
+  status      String       @default("pending") // pending, paid, shipped, delivered
   items       OrderItem[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
 
+// Model OrderItem
 model OrderItem {
-  id          Int         @id @default(autoincrement())
-  order       Order       @relation(fields: [orderId], references: [id])
+  id          Int          @id @default(autoincrement())
+  order       Order        @relation(fields: [orderId], references: [id])
   orderId     Int
-  product     Product     @relation(fields: [productId], references: [id])
+  product     Product      @relation(fields: [productId], references: [id])
   productId   Int
-  quantity    Int         @default(1)
+  quantity    Int          @default(1)
   price       Float
-  options     OrderItemOption[]
-  createdAt   DateTime    @default(now())
+  orderItemOptions OrderItemOption[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
+// Model OrderItemOption
 model OrderItemOption {
   id             Int               @id @default(autoincrement())
   orderItem      OrderItem         @relation(fields: [orderItemId], references: [id])
@@ -125,4 +191,13 @@ model OrderItemOption {
   optionValue    ProductOptionValue @relation(fields: [optionValueId], references: [id])
   optionValueId  Int
   additional_price Float            @default(0.00)
+}
+
+// Model Image
+model Image {
+  id        Int      @id @default(autoincrement())
+  fileName  String
+  fileUrl   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -1,24 +1,17 @@
-import { PrismaClient } from '@prisma/client';
+import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
 
+// POST - Update order status to 'paid'
+export async function POST(req: Request, { params }: { params: { id: string } }) {
+    try {
+        const updatedOrder = await prisma.order.update({
+            where: { id: parseInt(params.id) },
+            data: { status: 'paid' }
+        });
 
-const prisma = new PrismaClient();
-
-export default async function handler(req, res) {
-    const { id } = req.query;
-
-    if (req.method === 'PUT') {
-        const { status } = req.body;
-
-        try {
-            const updatedOrder = await prisma.order.update({
-                where: { id: parseInt(id) },
-                data: {
-                    status
-                }
-            });
-            res.status(200).json(updatedOrder);
-        } catch (error) {
-            res.status(500).json({ error: 'Error updating order' });
-        }
+        return NextResponse.json(updatedOrder);
+    } catch (error) {
+        return NextResponse.json({ error: 'Error updating order status' }, { status: 500 });
     }
 }
+

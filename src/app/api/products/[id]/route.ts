@@ -27,41 +27,59 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
     try {
-        const body = await request.json()
-        const { name, description, base_price, image_url, options } = body
-        const product = await prisma.product.update({
+        const body = await request.json();
+        const { name, description, base_price, image_url, options } = body;
+
+        // Update product data
+        await prisma.product.update({
             where: { id: parseInt(params.id) },
             data: {
                 name,
                 description,
                 base_price,
                 image_url,
-                options: {
-                    deleteMany: {},
-                    create: options.map(option => ({
-                        name: option.name,
-                        values: {
-                            create: option.values.map(value => ({
-                                value: value.value,
-                                additional_price: value.additional_price,
-                            })),
-                        },
-                    })),
-                },
             },
-            include: {
-                options: {
-                    include: {
-                        values: true,
+        });
+
+        // Delete existing options and values
+        await prisma.productOptionValue.deleteMany({
+            where: { optionId: { in: (await prisma.productOption.findMany({ where: { productId: parseInt(params.id) }, select: { id: true } })).map(opt => opt.id) } }
+        });
+
+        await prisma.productOption.deleteMany({
+            where: { productId: parseInt(params.id) }
+        });
+
+        // Create new options and values
+        const createdOptions = await Promise.all(options.map(async (option) => {
+            const createdOption = await prisma.productOption.create({
+                data: {
+                    name: option.name,
+                    productId: parseInt(params.id),
+                    values: {
+                        create: option.values.map(value => ({
+                            value: value.value,
+                            additional_price: value.additional_price,
+                        })),
                     },
                 },
-            },
-        })
-        return NextResponse.json(product)
+            });
+            return createdOption;
+        }));
+
+        // Fetch the updated product with options
+        const updatedProduct = await prisma.product.findUnique({
+            where: { id: parseInt(params.id) },
+            include: { options: { include: { values: true } } },
+        });
+
+        return NextResponse.json(updatedProduct);
     } catch (error) {
-        return NextResponse.json({ error: 'Error updating product' }, { status: 500 })
+        console.error("Error:", error);
+        return NextResponse.json({ error: 'Error updating product', details: error.message }, { status: 500 });
     }
 }
+
 
 export async function DELETE(request, { params }) {
     try {

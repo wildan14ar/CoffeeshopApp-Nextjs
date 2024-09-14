@@ -1,13 +1,13 @@
 import Link from "next/link";
 
 import { FaStoreAlt } from "react-icons/fa";
-import { CiCoffeeCup } from "react-icons/ci";
 import { IoIosStar } from "react-icons/io";
 import { IoHomeSharp, IoCard } from "react-icons/io5";
+import { TiShoppingCart } from "react-icons/ti";
 
 export default function Footnav() {
   return (
-    <ul className="bg-white sticky bottom-0 md:hidden flex flex-row items-center justify-between p-3 border-t-4 border-t-slate-300">
+    <ul className="bg-white dark:bg-zinc-900 sticky bottom-0 md:hidden flex flex-row items-center justify-between p-3">
       <li className="text-2xl transform transition-transform duration-300 hover:scale-125">
         <Link href="/">
           <IoHomeSharp title="Home" />
@@ -20,7 +20,7 @@ export default function Footnav() {
       </li>
       <li className="text-2xl transform transition-transform duration-300 hover:scale-125">
         <Link href="/products">
-          <CiCoffeeCup title="Products" />
+          <TiShoppingCart title="Products" />
         </Link>
       </li>
       <li className="text-2xl transform transition-transform duration-300 hover:scale-125">

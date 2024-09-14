@@ -4,7 +4,7 @@ import ButtonTheme from "@/components/atoms/ButtonTheme";
 
 export default function Navbar() {
   return (
-    <nav className="bg-white sticky top-0 w-full py-2 px-3 flex flex-row items-center justify-between z-10 border-b-4 border-b-slate-300 hidden md:block">
+    <nav className="bg-white sticky top-0 w-full py-2 px-3 hidden md:flex flex-row items-center justify-between z-10 border-b-4 border-b-slate-300">
       <h1 className="text-2xl font-bold flex flex-row">
         <BiSolidCoffeeBean /> Choffeeshop
       </h1>

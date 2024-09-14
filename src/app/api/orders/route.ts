@@ -1,61 +1,43 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+// POST - Checkout and create order from cart
+export async function POST(req: Request) {
+  const { userId } = await req.json();
 
-// GET semua order
-export async function GET() {
-    try {
-        const orders = await prisma.order.findMany({
-            include: {
-                items: {
-                    include: {
-                        product: true,
-                        options: {
-                            include: {
-                                optionValue: true
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        return NextResponse.json(orders, { status: 200 });
-    } catch (error) {
-        return NextResponse.json({ error: 'Error fetching orders' }, { status: 500 });
+  try {
+    const cart = await prisma.cart.findUnique({
+      where: { userId: userId },
+      include: { items: { include: { product: true } } }
+    });
+
+    if (!cart || cart.items.length === 0) {
+      return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
     }
-}
 
-// POST order baru
-export async function POST(request) {
-    const body = await request.json();
-    const { customer_name, items } = body;
+    const totalPrice = cart.items.reduce((total, item) => {
+      return total + item.product.base_price * item.quantity;
+    }, 0);
 
-    try {
-        const total_price = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const order = await prisma.order.create({
+      data: {
+        userId: userId,
+        totalPrice: totalPrice,
+        items: {
+          create: cart.items.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.product.base_price,
+          }))
+        },
+        status: 'pending',
+      }
+    });
 
-        const newOrder = await prisma.order.create({
-            data: {
-                customer_name,
-                total_price,
-                items: {
-                    create: items.map(item => ({
-                        productId: item.product_id,
-                        quantity: item.quantity,
-                        price: item.price,
-                        options: {
-                            create: item.options.map(option => ({
-                                optionValueId: option.option_value_id,
-                                additional_price: option.additional_price
-                            }))
-                        }
-                    }))
-                }
-            }
-        });
+    await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
 
-        return NextResponse.json(newOrder, { status: 201 });
-    } catch (error) {
-        return NextResponse.json({ error: 'Error creating order' }, { status: 500 });
-    }
+    return NextResponse.json(order);
+  } catch (error) {
+    return NextResponse.json({ error: 'Error creating order' }, { status: 500 });
+  }
 }
