@@ -1,14 +1,21 @@
 "use client";
 
+// Styles
 import localFont from "next/font/local";
 import "@/styles/globals.css";
 import "@/styles/style.css";
+
+// Components
 import Navbar from "@/components/Navbar";
 import Footnav from "@/components/Footnav";
+
+// Provider and More
 import { ThemeProvider } from "@/components/theme-provider";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import ValidationAge from "@/components/ValidationAge";
 import { usePathname } from "next/navigation";
+
+// Redux toolkit
 import { Provider } from "react-redux";
 import store from "./store";
 
@@ -24,7 +31,7 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-const dissableNav = ["/login", "/register", "/validation"];
+const dissableNav = ["/login", "/register", "/register/mitra", "/validation"];
 
 export default function RootLayout({
   children,
@@ -35,8 +42,12 @@ export default function RootLayout({
 
   return (
     <html lang="en">
+      <head>
+        <title>Coffee Shop</title>
+        <link rel="shortcut icon" href="/logo.png" type="image/x-icon" />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} bg-black`}
       >
         <ThemeProvider
           attribute="class"
@@ -45,11 +56,13 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Provider store={store}>
-            <div className="min-h-screen bg-background font-sans antialiased flex flex-col">
+            <div className="flex flex-col">
               <SessionProviderWrapper>
                 <ValidationAge>
                   {!dissableNav.includes(pathname) && <Navbar />}
-                  <div className="h-screen">{children}</div>
+                  <div className="min-h-screen">
+                  {children}
+                  </div>
                   {!dissableNav.includes(pathname) && <Footnav />}
                 </ValidationAge>
               </SessionProviderWrapper>

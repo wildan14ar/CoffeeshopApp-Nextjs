@@ -89,8 +89,8 @@ model Store {
 // Model StoreDetails
 model StoreDetails {
   id          Int         @id @default(autoincrement())
-  latitude    Float?
-  longitude   Float?
+  latitude    String?
+  longitude   String?
   whatsapp    String?
   instagram   String?
   facebook    String?

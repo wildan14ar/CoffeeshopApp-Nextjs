@@ -1,4 +1,4 @@
-import Carousel from "@/components/Carousel";
+import BannerCarousel from "@/components/BannerCarousel";
 
 export default function HomePage() {
   return (
@@ -13,7 +13,7 @@ export default function HomePage() {
           <li>E-Code</li>
         </ul>
       </div>
-      <Carousel />
+      <BannerCarousel />
     </main>
   );
 }

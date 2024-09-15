@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProducts } from "@/features/productSlice";
 import BackButton from "@/components/atoms/ButtonBack";
+import Loader from "@/components/atoms/Loader";
 
 export default function ProductsPage() {
   const dispatch = useDispatch();
@@ -15,7 +16,7 @@ export default function ProductsPage() {
     dispatch(fetchProducts());
   }, [dispatch]);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <Loader />;
   if (error) return <p>Error: {error}</p>;
 
   return (

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "StoreDetails" ALTER COLUMN "latitude" SET DATA TYPE TEXT,
+ALTER COLUMN "longitude" SET DATA TYPE TEXT;

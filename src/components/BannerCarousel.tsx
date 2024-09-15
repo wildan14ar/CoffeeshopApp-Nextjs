@@ -4,12 +4,12 @@ import React, { useEffect, useState } from "react";
 import { motion, useMotionValue } from "framer-motion";
 
 const imgs = [
-  "/Banner-ST-01.jpg",
-  "/Banner-ST-01.jpg",
-  "/Banner-ST-01.jpg",
-  "/Banner-ST-01.jpg",
-  "/Banner-ST-01.jpg",
-  "/Banner-ST-01.jpg",
+  "/banner1.png",
+  "/banner2.png",
+  "/banner3.png",
+  "/banner4.png",
+  "/banner1.png",
+  "/banner2.png",
   "/Banner-ST-01.jpg",
 ];
 
@@ -25,7 +25,7 @@ const SPRING_OPTIONS = {
 };
 
 
-export default function Carousel() {
+export default function BannerCarousel() {
   const [imgIndex, setImgIndex] = useState(0);
 
   const dragX = useMotionValue(0);
