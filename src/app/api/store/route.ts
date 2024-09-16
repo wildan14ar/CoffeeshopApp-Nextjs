@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma'; // pastikan ini menuju file Prisma Client-mu
-import bcrypt from 'bcrypt'; // untuk hashing password
+import bcrypt from 'bcryptjs'; // untuk hashing password
 
 export async function POST(req: Request) {
   try {

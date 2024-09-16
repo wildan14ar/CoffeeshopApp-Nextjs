@@ -1,6 +1,6 @@
 import { FaUser } from "react-icons/fa";
 import { BiSolidCoffeeBean } from "react-icons/bi";
-import ButtonTheme from "@/components/atoms/ButtonTheme";
+import { ButtonThemeIcon } from "@/components/atoms/ButtonTheme";
 
 export default function Navbar() {
   return (
@@ -17,7 +17,7 @@ export default function Navbar() {
         <li className="text-2xl">
           <FaUser title="Account" />
         </li>
-        <ButtonTheme />
+        <ButtonThemeIcon />
       </ul>
     </nav>
   );

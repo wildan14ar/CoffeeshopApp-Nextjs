@@ -43,11 +43,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <title>Coffee Shop</title>
+        <title>Vapmart</title>
         <link rel="shortcut icon" href="/logo.png" type="image/x-icon" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} bg-black`}
+        className={`${geistSans.variable} ${geistMono.variable} dark:bg-black`}
       >
         <ThemeProvider
           attribute="class"

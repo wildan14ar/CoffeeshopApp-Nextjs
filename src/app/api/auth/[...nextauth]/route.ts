@@ -37,11 +37,12 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // Return user object with role
         return {
           id: user.id,
           email: user.email,
           name: user.name,
-          role: user.role
+          role: user.role, // Sertakan role di sini
         };
       }
     })
@@ -53,18 +54,20 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        session.user.role = token.role as string; // Tambahkan role ke session
       }
       return session;
     },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.role = user.role; // Tambahkan role ke token JWT
       }
       return token;
     }
   },
   pages: {
-    signIn: '/auth/signin',
+    signIn: '/login',
     // Add other custom pages if needed
   },
   secret: process.env.NEXTAUTH_SECRET,
