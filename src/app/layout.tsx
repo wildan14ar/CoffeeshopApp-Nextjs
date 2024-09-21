@@ -31,7 +31,7 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-const dissableNav = ["/login", "/register", "/register/mitra", "/validation"];
+const dissableNav = ["/login", "/register", "/register/mitra", "/validation", "/cart"];
 
 export default function RootLayout({
   children,

@@ -1,20 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProducts } from "@/features/productSlice"; // Import Redux action untuk fetch produk
 
 export default function Home() {
-  const [products, setProducts] = useState([]);
+  const dispatch = useDispatch();
+  
+  // Ambil produk, loading, dan error dari Redux store
+  const { products, loading, error } = useSelector((state) => state.products);
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    dispatch(fetchProducts()); // Fetch produk menggunakan Redux
+  }, [dispatch]);
 
-  async function fetchProducts() {
-    const response = await fetch("/api/products");
-    const data = await response.json();
-    setProducts(data);
-  }
+  if (loading) return <div>Loading...</div>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <main>

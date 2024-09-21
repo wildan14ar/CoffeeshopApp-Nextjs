@@ -19,8 +19,8 @@ export default function Footnav() {
         </Link>
       </li>
       <li className="text-2xl transform transition-transform duration-300 hover:scale-125">
-        <Link href="/products">
-          <TiShoppingCart title="Products" />
+        <Link href="/product">
+          <TiShoppingCart title="Product" />
         </Link>
       </li>
       <li className="text-2xl transform transition-transform duration-300 hover:scale-125">

@@ -1,131 +1,94 @@
-export default function MultipleCarousel(props) {
-  const { children, show, infiniteLoop } = props;
+"use client";
 
-  const [currentIndex, setCurrentIndex] = useState(infiniteLoop ? show : 0);
-  const [length, setLength] = useState(children.length);
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay } from "swiper/modules";
 
-  const [isRepeating, setIsRepeating] = useState(
-    infiniteLoop && children.length > show
-  );
-  const [transitionEnabled, setTransitionEnabled] = useState(true);
+// Import Swiper styles
+import "swiper/css";
+import "swiper/css/autoplay";
+import "swiper/css/pagination";
 
-  const [touchPosition, setTouchPosition] = useState(null);
-
-  // Set the length to match current children from props
-  useEffect(() => {
-    setLength(children.length);
-    setIsRepeating(infiniteLoop && children.length > show);
-  }, [children, infiniteLoop, show]);
-
-  useEffect(() => {
-    if (isRepeating) {
-      if (currentIndex === show || currentIndex === length) {
-        setTransitionEnabled(true);
-      }
-    }
-  }, [currentIndex, isRepeating, show, length]);
-
-  const next = () => {
-    if (isRepeating || currentIndex < length - show) {
-      setCurrentIndex((prevState) => prevState + 1);
-    }
-  };
-
-  const prev = () => {
-    if (isRepeating || currentIndex > 0) {
-      setCurrentIndex((prevState) => prevState - 1);
-    }
-  };
-
-  const handleTouchStart = (e) => {
-    const touchDown = e.touches[0].clientX;
-    setTouchPosition(touchDown);
-  };
-
-  const handleTouchMove = (e) => {
-    const touchDown = touchPosition;
-
-    if (touchDown === null) {
-      return;
-    }
-
-    const currentTouch = e.touches[0].clientX;
-    const diff = touchDown - currentTouch;
-
-    if (diff > 5) {
-      next();
-    }
-
-    if (diff < -5) {
-      prev();
-    }
-
-    setTouchPosition(null);
-  };
-
-  const handleTransitionEnd = () => {
-    if (isRepeating) {
-      if (currentIndex === 0) {
-        setTransitionEnabled(false);
-        setCurrentIndex(length);
-      } else if (currentIndex === length + show) {
-        setTransitionEnabled(false);
-        setCurrentIndex(show);
-      }
-    }
-  };
-
-  const renderExtraPrev = () => {
-    let output = [];
-    for (let index = 0; index < show; index++) {
-      output.push(children[length - 1 - index]);
-    }
-    output.reverse();
-    return output;
-  };
-
-  const renderExtraNext = () => {
-    let output = [];
-    for (let index = 0; index < show; index++) {
-      output.push(children[index]);
-    }
-    return output;
-  };
+export default function MultipleCarousel() {
+  const slides = [
+    "/banner1.png",
+    "/banner2.png",
+    "/banner3.png",
+    "/banner4.png",
+    "/banner1.png",
+    "/banner2.png",
+    "/banner3.png",
+    "/banner4.png",
+    "/banner1.png",
+    "/banner2.png",
+    "/banner3.png",
+    "/banner4.png",
+    "/banner1.png",
+    "/banner2.png",
+    "/banner3.png",
+    "/banner4.png",
+    "/banner1.png",
+    "/banner2.png",
+    "/banner3.png",
+    "/banner4.png",
+    "/banner1.png",
+    "/banner2.png",
+    "/banner3.png",
+    "/banner4.png",
+  ];
 
   return (
-    <div className="carousel-container">
-      <div className="carousel-wrapper">
-        {/* You can alwas change the content of the button to other things */}
-        {(isRepeating || currentIndex > 0) && (
-          <button onClick={prev} className="left-arrow">
-            &lt;
-          </button>
-        )}
-        <div
-          className="carousel-content-wrapper"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-        >
-          <div
-            className={`carousel-content show-${show}`}
-            style={{
-              transform: `translateX(-${currentIndex * (100 / show)}%)`,
-              transition: !transitionEnabled ? "none" : undefined,
-            }}
-            onTransitionEnd={() => handleTransitionEnd()}
-          >
-            {length > show && isRepeating && renderExtraPrev()}
-            {children}
-            {length > show && isRepeating && renderExtraNext()}
-          </div>
-        </div>
-        {/* You can alwas change the content of the button to other things */}
-        {(isRepeating || currentIndex < length - show) && (
-          <button onClick={next} className="right-arrow">
-            &gt;
-          </button>
-        )}
-      </div>
+    <div className="carousel-container w-full max-w-[900px] my-3 px-2 mx-auto">
+      <label className="font-bold text-purple-500 pb-4">Best Seller</label>
+      <Swiper
+        spaceBetween={10}
+        loop={true}
+        autoplay={{
+          delay: 5000,
+          disableOnInteraction: false,
+        }}
+        modules={[Autoplay]}
+        breakpoints={{
+          // When window width is >= 320px
+          200: {
+            slidesPerView: 2,
+          },
+          260: {
+            slidesPerView: 3,
+          },
+          320: {
+            slidesPerView: 4,
+          },
+          // When window width is >= 480px
+          480: {
+            slidesPerView: 5,
+          },
+          // When window width is >= 640px
+          640: {
+            slidesPerView: 6,
+          },
+          // When window width is >= 900px
+          900: {
+            slidesPerView: 7,
+          },
+          // When window width is >= 1200px
+          1200: {
+            slidesPerView: 8,
+          },
+        }}
+      >
+        {slides.map((slide, index) => (
+          <SwiperSlide key={index}>
+            {/* Tetapkan min-height untuk menjaga konsistensi tinggi */}
+            <div className="w-full h-[75px] sm:h-[100px] lg:h-[125px]">
+              <img
+                src={slide}
+                alt={`Slide ${index + 1}`}
+                className="w-full h-full object-cover rounded-lg"
+              />
+            </div>
+          </SwiperSlide>
+        ))}
+      </Swiper>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import Link from "next/link";
 export default function DashboardPage() {
   return (
     <div className="w-full h-full">
-      <div className="flex flex-col gap-1 text-xl font-bold sticky top-0 justify-start p-2 md:hidden border-b-2 border-stink-900 z-10 bg-black">
+      <div className="flex flex-col gap-1 text-xl font-bold sticky top-0 justify-start p-2 md:hidden border-b-2 border-stink-900 z-10 bg-white dark:bg-black">
         <BackButton />
         <h2>Dashboard</h2>
       </div>

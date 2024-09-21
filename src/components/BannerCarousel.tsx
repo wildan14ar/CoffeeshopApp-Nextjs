@@ -2,6 +2,7 @@
 
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
+import Link from "next/link"
 
 // Import Swiper styles
 import "swiper/css";
@@ -14,10 +15,17 @@ export default function BannerCarousel() {
     "/banner2.png",
     "/banner3.png",
     "/banner4.png",
+    "/banner2.png",
+    "/banner3.png",
+    "/banner4.png",
   ];
 
   return (
-    <div className="carousel-container w-full my-3 px-2 mx-auto">
+    <div className="carousel-container w-full max-w-[700px] my-3 px-2 mx-auto">
+      <div className="flex flex-row justify-between my-2">
+        <h4 className="text-sm">Programs and Promotions</h4>
+        <Link href="/program" className="text-sm font-bold text-purple-500">See All</Link>
+      </div>
       <Swiper
         spaceBetween={30}
         slidesPerView={1}
@@ -30,7 +38,6 @@ export default function BannerCarousel() {
           clickable: true,
         }}
         modules={[Autoplay, Pagination]}
-        className="w-full max-w-[700px]"
       >
         {slides.map((slide, index) => (
           <SwiperSlide key={index}>

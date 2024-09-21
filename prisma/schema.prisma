@@ -10,6 +10,15 @@ datasource db {
   directUrl         = env("DIRECT_URL")
 }
 
+// Model Image
+model Image {
+  id        Int      @id @default(autoincrement())
+  fileName  String
+  fileUrl   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 enum UserRole {
   USER
   OWNER
@@ -30,7 +39,10 @@ model User {
   sessions      Session[]
   stores        Store[]
   role          UserRole @default(USER)
+  carts         Cart[]    // Relasi ke Cart
+  orders        Order[]   // Relasi ke Order
 }
+
 
 // Model Account
 model Account {
@@ -84,6 +96,7 @@ model Store {
   userId      String
   details     StoreDetails?
   products    Product[]
+  orders      Order[]      // Relasi ke Order
 }
 
 // Model StoreDetails
@@ -127,77 +140,102 @@ model ProductOption {
 
 // Model ProductOptionValue
 model ProductOptionValue {
-  id             Int                 @id @default(autoincrement())
-  value          String
-  additional_price Float              @default(0.00)
-  option         ProductOption        @relation(fields: [optionId], references: [id])
-  optionId       Int
-  orderItemOptions OrderItemOption[]  // Relasi ke OrderItemOption
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+  id                Int                 @id @default(autoincrement())
+  value             String
+  additional_price  Float               @default(0.00)
+  option            ProductOption       @relation(fields: [optionId], references: [id])
+  optionId          Int
+  orderItemOptions  OrderItemOption[]  // Relation to OrderItemOption
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  cartItemOptions   CartItemOption[]   // Relation to CartItemOption
 }
 
 // Model Cart
 model Cart {
-  id          Int          @id @default(autoincrement())
-  userId      Int?
-  items       CartItem[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id        Int      @id @default(autoincrement())
+  userId    String   @unique // Setiap user hanya bisa memiliki satu cart
+  user      User     @relation(fields: [userId], references: [id])
+  cartItems CartItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Model CartItem
 model CartItem {
-  id          Int          @id @default(autoincrement())
-  cart        Cart         @relation(fields: [cartId], references: [id])
-  cartId      Int
-  product     Product      @relation(fields: [productId], references: [id])
-  productId   Int
-  quantity    Int          @default(1)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id        Int      @id @default(autoincrement())
+  cartId    Int
+  productId Int
+  quantity  Int      @default(1)
+  totalBasePrice Float  // Total base price dari product * quantity
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id])
+  options   CartItemOption[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Model CartItemOption
+model CartItemOption {
+  id             Int                @id @default(autoincrement())
+  cartItemId     Int
+  optionValueId  Int
+  cartItem       CartItem           @relation(fields: [cartItemId], references: [id], onDelete: Cascade)
+  optionValue    ProductOptionValue @relation(fields: [optionValueId], references: [id])
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 }
 
 // Model Order
 model Order {
   id          Int          @id @default(autoincrement())
-  userId      Int?
-  totalPrice  Float
-  status      String       @default("pending") // pending, paid, shipped, delivered
-  items       OrderItem[]
+  userId      String    // Pastikan ini bertipe Int jika merujuk ke id User
+  user        User   @relation(fields: [userId], references: [id])
+  orderItems  OrderItem[]
+  totalPrice  Float        // Total harga dari semua item di order
+  status      String       // Status dari pesanan (e.g., 'pending', 'paid', 'shipped')
+  storeId     Int          // Tambahkan field ini untuk relasi ke Store
+  store       Store        @relation(fields: [storeId], references: [id])
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+  transactions Transaction[] // Relasi ke transaksi pembayaran
 }
+
 
 // Model OrderItem
 model OrderItem {
-  id          Int          @id @default(autoincrement())
-  order       Order        @relation(fields: [orderId], references: [id])
-  orderId     Int
-  product     Product      @relation(fields: [productId], references: [id])
-  productId   Int
-  quantity    Int          @default(1)
-  price       Float
-  orderItemOptions OrderItemOption[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  quantity  Int      @default(1)
+  price     Float    // Total harga dari item ini
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id])
+  options   OrderItemOption[]
 }
 
 // Model OrderItemOption
 model OrderItemOption {
-  id             Int               @id @default(autoincrement())
-  orderItem      OrderItem         @relation(fields: [orderItemId], references: [id])
-  orderItemId    Int
-  optionValue    ProductOptionValue @relation(fields: [optionValueId], references: [id])
-  optionValueId  Int
-  additional_price Float            @default(0.00)
+  id            Int                @id @default(autoincrement())
+  orderItemId   Int
+  optionValueId Int
+  orderItem     OrderItem          @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  optionValue   ProductOptionValue @relation(fields: [optionValueId], references: [id])
 }
 
-// Model Image
-model Image {
+// Model Transaction
+model Transaction {
   id        Int      @id @default(autoincrement())
-  fileName  String
-  fileUrl   String
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id])
+  amount    Float    // Total pembayaran
+  status    String   // Status transaksi (e.g., 'pending', 'paid', 'failed')
+  paymentProvider String // e.g., 'Xendit'
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Programs and Pormotions
+model Programs {
+         
 }

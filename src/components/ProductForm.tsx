@@ -3,9 +3,23 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
+import Upload from "@/components/atoms/Upload";
+import {
+  fetchProductById,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+} from "@/features/productSlice";
 
 export default function ProductForm({ productId }) {
   const router = useRouter();
+  const dispatch = useDispatch();
+  const { products, product, loading, error } = useSelector(
+    (state) => state.products
+  );
+  const [uploadUrl, setUploadUrl] = useState("");
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -14,17 +28,30 @@ export default function ProductForm({ productId }) {
     options: [],
   });
 
+  const handleUpload = (url) => {
+    setUploadUrl(url); // Menyimpan URL gambar yang diterima dari komponen UploadImage
+    setFormData((prevData) => ({
+      ...prevData,
+      image_url: url,
+    }));
+  };
+
   useEffect(() => {
     if (productId) {
-      fetchProduct();
+      const existingProduct = products.find((p) => p.id === productId);
+      if (existingProduct) {
+        setFormData(existingProduct);
+      } else {
+        dispatch(fetchProductById(productId));
+      }
     }
-  }, [productId]);
+  }, [productId, products, dispatch]);
 
-  async function fetchProduct() {
-    const response = await fetch(`/api/products/${productId}`);
-    const data = await response.json();
-    setFormData(data);
-  }
+  useEffect(() => {
+    if (product) {
+      setFormData(product);
+    }
+  }, [product]);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -37,8 +64,15 @@ export default function ProductForm({ productId }) {
   function handleOptionChange(index, e) {
     const { name, value } = e.target;
     setFormData((prevData) => {
-      const newOptions = [...prevData.options];
-      newOptions[index] = { ...newOptions[index], [name]: value };
+      const newOptions = prevData.options.map((option, i) => {
+        if (i === index) {
+          return {
+            ...option,
+            [name]: value,
+          };
+        }
+        return option;
+      });
       return { ...prevData, options: newOptions };
     });
   }
@@ -46,11 +80,24 @@ export default function ProductForm({ productId }) {
   function handleOptionValueChange(optionIndex, valueIndex, e) {
     const { name, value } = e.target;
     setFormData((prevData) => {
-      const newOptions = [...prevData.options];
-      newOptions[optionIndex].values[valueIndex] = {
-        ...newOptions[optionIndex].values[valueIndex],
-        [name]: name === "additional_price" ? parseFloat(value) : value,
-      };
+      const newOptions = prevData.options.map((option, idx) => {
+        if (idx === optionIndex) {
+          const newValues = option.values.map((val, vIdx) => {
+            if (vIdx === valueIndex) {
+              return {
+                ...val,
+                [name]: name === "additional_price" ? parseFloat(value) : value,
+              };
+            }
+            return val;
+          });
+          return {
+            ...option,
+            values: newValues,
+          };
+        }
+        return option;
+      });
       return { ...prevData, options: newOptions };
     });
   }
@@ -71,63 +118,53 @@ export default function ProductForm({ productId }) {
 
   function addOptionValue(optionIndex) {
     setFormData((prevData) => {
-      const newOptions = [...prevData.options];
-      newOptions[optionIndex].values.push({ value: "", additional_price: 0 });
+      const newOptions = prevData.options.map((option, idx) => {
+        if (idx === optionIndex) {
+          return {
+            ...option,
+            values: [...option.values, { value: "", additional_price: 0 }],
+          };
+        }
+        return option;
+      });
       return { ...prevData, options: newOptions };
     });
   }
 
   function removeOptionValue(optionIndex, valueIndex) {
     setFormData((prevData) => {
-      const newOptions = [...prevData.options];
-      newOptions[optionIndex].values = newOptions[optionIndex].values.filter(
-        (_, i) => i !== valueIndex
-      );
+      const newOptions = prevData.options.map((option, idx) => {
+        if (idx === optionIndex) {
+          return {
+            ...option,
+            values: option.values.filter((_, vIdx) => vIdx !== valueIndex),
+          };
+        }
+        return option;
+      });
       return { ...prevData, options: newOptions };
     });
   }
 
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault();
-    const url = productId ? `/api/products/${productId}` : "/api/products";
-    const method = productId ? "PUT" : "POST";
-
-    try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        router.push("/");
-      } else {
-        console.error("Error saving product");
-      }
-    } catch (error) {
-      console.error("Error:", error);
+    if (productId) {
+      dispatch(updateProduct({ id: productId, updatedProduct: formData }));
+    } else {
+      dispatch(createProduct(formData));
     }
+    router.push("/"); // Kembali ke halaman utama setelah submit
   }
 
-  async function handleDelete() {
+  function handleDelete() {
     if (confirm("Are you sure you want to delete this product?")) {
-      try {
-        const response = await fetch(`/api/products/${productId}`, {
-          method: "DELETE",
-        });
-
-        if (response.ok) {
-          router.push("/");
-        } else {
-          console.error("Error deleting product");
-        }
-      } catch (error) {
-        console.error("Error:", error);
-      }
+      dispatch(deleteProduct(productId));
+      router.push("/"); // Kembali ke halaman utama setelah delete
     }
   }
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <form
@@ -189,118 +226,115 @@ export default function ProductForm({ productId }) {
           </div>
 
           <div className="mb-4">
-            <label
+          <label
               htmlFor="image_url"
               className="block text-gray-700 font-bold mb-2"
             >
-              Image URL:
+              Image:
             </label>
-            <input
-              type="text"
-              id="image_url"
-              name="image_url"
-              value={formData.image_url || ""}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-indigo-100 focus:border-indigo-300"
-            />
+            {uploadUrl && (
+              <div>
+                <h3>Uploaded Image</h3>
+                <img
+                  src={uploadUrl}
+                  alt="Uploaded"
+                  style={{ maxWidth: "100px", height: "auto" }}
+                />
+                <p>URL: {uploadUrl}</p>
+              </div>
+            )}
+            <Upload onUpload={handleUpload} />
           </div>
-        </div>
 
-        <div>
-          <h3 className="text-lg font-bold mb-2">Product Options</h3>
-
-          {formData.options.map((option, optionIndex) => (
-            <div key={optionIndex} className="mb-4 p-4 bg-gray-100 rounded-md">
-              <div className="mb-2">
+          <div className="mb-4">
+            <label className="block text-gray-700 font-bold mb-2">
+              Options:
+            </label>
+            {formData.options.map((option, optionIndex) => (
+              <div key={optionIndex} className="mb-4">
                 <input
                   type="text"
                   name="name"
                   value={option.name}
                   onChange={(e) => handleOptionChange(optionIndex, e)}
                   placeholder="Option Name"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-indigo-100 focus:border-indigo-300"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
                 />
-              </div>
-
-              <button
-                type="button"
-                onClick={() => removeOption(optionIndex)}
-                className="text-red-500 text-sm"
-              >
-                Remove Option
-              </button>
-
-              <h4 className="mt-2 mb-2 font-bold">Option Values</h4>
-              {option.values.map((value, valueIndex) => (
-                <div
-                  key={valueIndex}
-                  className="flex flex-col md:flex-row gap-2 mb-2"
+                {option.values.map((value, valueIndex) => (
+                  <div key={valueIndex} className="flex gap-4 mb-2">
+                    <input
+                      type="text"
+                      name="value"
+                      value={value.value}
+                      onChange={(e) =>
+                        handleOptionValueChange(optionIndex, valueIndex, e)
+                      }
+                      placeholder="Value"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                    <input
+                      type="number"
+                      name="additional_price"
+                      value={value.additional_price}
+                      onChange={(e) =>
+                        handleOptionValueChange(optionIndex, valueIndex, e)
+                      }
+                      placeholder="Additional Price"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeOptionValue(optionIndex, valueIndex)}
+                      className="bg-red-500 text-white px-3 py-1 rounded"
+                    >
+                      Remove Value
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => addOptionValue(optionIndex)}
+                  className="bg-green-500 text-white px-3 py-1 rounded"
                 >
-                  <input
-                    type="text"
-                    name="value"
-                    value={value.value}
-                    onChange={(e) =>
-                      handleOptionValueChange(optionIndex, valueIndex, e)
-                    }
-                    placeholder="Value"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-indigo-100 focus:border-indigo-300"
-                  />
-                  <input
-                    type="number"
-                    name="additional_price"
-                    value={value.additional_price}
-                    onChange={(e) =>
-                      handleOptionValueChange(optionIndex, valueIndex, e)
-                    }
-                    placeholder="Additional Price"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-indigo-100 focus:border-indigo-300"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeOptionValue(optionIndex, valueIndex)}
-                    className="text-red-500 text-sm text-left"
-                  >
-                    Remove Value
-                  </button>
-                </div>
-              ))}
+                  Add Value
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeOption(optionIndex)}
+                  className="bg-red-500 text-white px-3 py-1 rounded mt-2"
+                >
+                  Remove Option
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addOption}
+              className="bg-green-500 text-white px-3 py-1 rounded"
+            >
+              Add Option
+            </button>
+          </div>
+        </div>
 
-              <button
-                type="button"
-                onClick={() => addOptionValue(optionIndex)}
-                className="text-indigo-500 text-sm"
-              >
-                Add Value
-              </button>
-            </div>
-          ))}
-
+        <div className="flex flex-col gap-4">
           <button
-            type="button"
-            onClick={addOption}
-            className="text-indigo-500 text-sm mb-4"
+            type="submit"
+            className="bg-blue-500 text-white px-4 py-2 rounded"
           >
-            Add Option
+            {productId ? "Update Product" : "Create Product"}
           </button>
+          {productId && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="bg-red-500 text-white px-4 py-2 rounded"
+            >
+              Delete Product
+            </button>
+          )}
         </div>
       </div>
-      <button
-        type="submit"
-        className="w-full bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600"
-      >
-        Save Product
-      </button>
-
-      {productId && (
-        <button
-          type="button"
-          onClick={handleDelete}
-          className="w-full mt-2 bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600"
-        >
-          Delete Product
-        </button>
-      )}
     </form>
   );
 }
