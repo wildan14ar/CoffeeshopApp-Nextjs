@@ -1,8 +1,9 @@
 import { FaUser } from "react-icons/fa";
 import { ButtonThemeBox } from "@/components/atoms/ButtonTheme";
-import BackButton from "@/components/atoms/ButtonBack";
+import { BackButton } from "@/components/atoms/ButtonBack";
 import ButtonLogout from "@/components/atoms/ButtonLogout";
 import Link from "next/link";
+
 
 export default function DashboardPage() {
   return (

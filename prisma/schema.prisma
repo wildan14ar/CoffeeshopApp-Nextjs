@@ -41,6 +41,7 @@ model User {
   role          UserRole @default(USER)
   carts         Cart[]    // Relasi ke Cart
   orders        Order[]   // Relasi ke Order
+  reviews       ReviewProduct[]
 }
 
 
@@ -125,6 +126,7 @@ model Product {
   updatedAt   DateTime      @updatedAt
   store       Store         @relation(fields: [storeId], references: [id])
   storeId     Int
+  reviews     ReviewProduct[] 
 }
 
 // Model ProductOption
@@ -235,7 +237,41 @@ model Transaction {
   updatedAt DateTime @updatedAt
 }
 
-// Programs and Pormotions
-model Programs {
-         
+// Enum for Blog Categories
+enum BlogCategory {
+  News
+  Howto
+  Programs
+}
+
+// Model Blogs
+model Blogs {
+  id          String       @id @default(cuid())
+  name        String
+  description String
+  image_url   String
+  content     String       
+  category    BlogCategory // Menambahkan kategori untuk blog
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// Model ReviewProduct
+model ReviewProduct {
+  id        String   @id @default(cuid())
+  userId    String
+  productId Int
+  favorite  Boolean  @default(false)
+  review    Int      @default(0) // Nilai review, bisa disesuaikan rentangnya (misal 1-5)
+  message   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relasi dengan User
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Relasi dengan Product
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId]) // Setiap user hanya bisa memberi review satu kali untuk setiap produk
 }

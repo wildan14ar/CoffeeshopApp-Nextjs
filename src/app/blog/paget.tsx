@@ -6,18 +6,20 @@ export default function BlogsPage() {
   const [blogs, setBlogs] = useState([]);
 
   useEffect(() => {
-    fetch('/api/blog?category=Programs')
+    fetch('/api/blog')
       .then((response) => response.json())
       .then((data) => setBlogs(data));
   }, []);
 
   return (
-      <div className='w-full max-w-[900px] flex flex-warp justify-center gap-3 p-3'>
+    <div>
+      <ul>
         {blogs.map((blog) => (
             <Link href={`/blog/${blog.id}`}>
-              <img src={blog.image_url} alt={blog.name} className='w-full max-w-[400px]' />
+              <img src={blog.image_url} alt={blog.name} width="200" />
             </Link>
         ))}
-      </div>
+      </ul>
+    </div>
   );
 }
