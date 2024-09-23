@@ -2,35 +2,50 @@
 
 import Link from "next/link";
 import Product from "@/components/Product";
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchProducts } from "@/features/productSlice"; // Pastikan path ke productSlice benar
+import { useEffect, useState } from "react";
 import { BackButton } from "@/components/atoms/ButtonBack";
 import Loader from "@/components/atoms/Loader";
 
 export default function ProductsPage() {
-  const dispatch = useDispatch();
-  
-  // Ambil state dari Redux store untuk products
-  const { products, loading, error } = useSelector((state) => state.products); // Pastikan 'products' sesuai dengan state key dari store.js
-  
-  // Fetch products ketika komponen di-mount
-  useEffect(() => {
-    dispatch(fetchProducts());
-  }, [dispatch]);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Tampilkan loader jika sedang loading
+  // Fetch products from the /api/blog endpoint
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("/api/blog");
+        if (!response.ok) {
+          throw new Error("Failed to fetch products");
+        }
+        const result = await response.json();
+        console.log(result); // Verify API structure
+        setData(result);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Show loader if loading
   if (loading) return <Loader />;
-  
-  // Tampilkan error jika ada masalah dalam fetching
+
+  // Show error message if any
   if (error) return <p>Error: {error}</p>;
+
+  // Extract and flatten products
+  const products = data ? Object.values(data).flatMap(item => item.products || []) : [];
 
   return (
     <div className="w-full h-full flex flex-col md:flex-row justify-center items-center">
-      <div className="flex flex-col sticky top-0 p-2  border-b-2 border-stink-900 bg-black z-10 w-full md:w-[1/5]">
-        <div className="flex flex-col gap-1 text-xl font-bold justify-start md:hidden">
+      <div className="flex flex-col sticky top-0 p-2 border-b-2 border-stink-900 bg-black z-10 w-full md:w-[1/5]">
+        <div className="flex flex-row justify-between items-center gap-1 text-xl font-bold md:hidden my-2">
           <BackButton />
-          <h2>Store</h2>
+          <h2 className="gradient-text text-2xl">Product</h2>
         </div>
         <ul className="flex flex-row w-full md:flex-col justify-around items-center md:items-start md:gap-2">
           <li>Menu</li>
@@ -40,11 +55,17 @@ export default function ProductsPage() {
         </ul>
       </div>
       <div className="container mx-auto p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 h-full overscroll-y-auto">
-        {products.map((product) => (
-          <Link href={`/product/${product.id}`} key={product.id}>
-            <Product product={product} />
-          </Link>
-        ))}
+        {products && products.length > 0 ? (
+          products.map((product) => (
+            product?.id && (
+              <Link href={`/product/${product.id}`} key={product.id}>
+                <Product product={product} />
+              </Link>
+            )
+          ))
+        ) : (
+          <p>No products available</p>
+        )}
       </div>
     </div>
   );

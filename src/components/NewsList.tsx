@@ -12,16 +12,16 @@ export default function NewsList({ int }) {
   }, []);
 
   return (
-    <ul className="p-2 flex flex-col justify-center w-full gap-2">
+    <ul className="flex flex-col justify-center w-full gap-2">
       {blogs.slice(0, int || blogs.length).map((blog) => (
         <Link href={`/blog/${blog.id}`} key={blog.id}>
-          <li className="p-2 w-full h-[80px] flex flex-row gap-4 bg-gray-800 rounded shadow-md hover:bg-gray-700 transition-all">
+          <li className="w-full h-[80px] flex flex-row gap-2 bg-zinc-900 rounded shadow-md">
             <img
               src={blog.image_url}
               alt={blog.name}
-              className="w-1/5 h-full object-cover rounded m-[-2]"
+              className="w-1/4 h-full object-cover rounded m-[-2]"
             />
-            <div className="flex flex-col w-full overflow-hidden">
+            <div className="flex flex-col w-full overflow-hidden p-2">
               <h4 className="text-lg font-bold text-white truncate">
                 {blog.name}
               </h4>

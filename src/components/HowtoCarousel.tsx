@@ -10,14 +10,14 @@ import "swiper/css";
 import "swiper/css/autoplay";
 import "swiper/css/pagination";
 
-export default function BannerCarousel() {
+export default function HowtoCarousel() {
   const [slides, setSlides] = useState([]);
 
   useEffect(() => {
     // Fetch the blog data for the 'Programs' category
     async function fetchSlides() {
       try {
-        const response = await fetch("/api/blog?category=Programs");
+        const response = await fetch("/api/blog?category=Howto");
         const data = await response.json();
         // Get only the first 5 items
         const imageUrls = data.slice(0, 5).map((item) => item.image_url);
@@ -33,8 +33,8 @@ export default function BannerCarousel() {
   return (
     <div className="carousel-container w-full max-w-[700px] my-3 px-2 mx-auto">
       <div className="flex flex-row justify-between my-2">
-        <h4 className="text-sm">Programs and Promotions</h4>
-        <Link href="/blog/program" className="text-sm font-bold text-purple-500">
+        <h4 className="text-sm">How to use the apps</h4>
+        <Link href="/blog/Howto" className="text-sm font-bold text-purple-500">
           See All
         </Link>
       </div>
@@ -54,7 +54,7 @@ export default function BannerCarousel() {
         {slides.length > 0 &&
           slides.map((slide, index) => (
             <SwiperSlide key={index}>
-              <div className="w-full h-[200px] sm:h-[350px] lg:h-[400px]">
+              <div className="w-full h-[220px] sm:h-[370px] lg:h-[420px]">
                 <img
                   src={slide}
                   alt={`Slide ${index + 1}`}

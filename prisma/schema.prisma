@@ -20,8 +20,8 @@ model Image {
 }
 
 enum UserRole {
-  USER
-  OWNER
+  MEMBER
+  ADMIN
   MANAGER
 }
 
@@ -38,7 +38,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   stores        Store[]
-  role          UserRole @default(USER)
+  role          UserRole @default(MEMBER)
   carts         Cart[]    // Relasi ke Cart
   orders        Order[]   // Relasi ke Order
   reviews       ReviewProduct[]

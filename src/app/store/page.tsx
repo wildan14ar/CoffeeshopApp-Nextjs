@@ -1,4 +1,4 @@
-import BackButton from "@/components/atoms/ButtonBack";
+import HeadingPhone from "@/components/atoms/HeadingPhone";
 
 export default function StorePage() {
   // Contoh data cabang toko
@@ -54,12 +54,9 @@ export default function StorePage() {
   ];
 
   return (
-    <div className="w-full h-full overflow-y-auto flex flex-col">
-      <div className="flex flex-col gap-1 text-xl font-bold sticky top-0 justify-start p-2 md:hidden">
-        <BackButton />
-        <h2>Store</h2>
-      </div>
-      <div className="flex flex-col md:flex-row gap-3 md:mx-auto md:w-4/5 justify-start mt-10">
+    <div className="w-full flex flex-col gap-2">
+      <HeadingPhone name="Store" />
+      <div className="flex flex-col md:flex-row md:mx-auto md:w-4/5 justify-start">
         <iframe
           src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d15863.673978198904!2d106.6567018!3d-6.2744472!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69e553aeca8d97%3A0xd3e5d04eb554abde!2sInstitut%20Teknologi%20Tangerang%20Selatan!5e0!3m2!1sid!2sid!4v1725634701747!5m2!1sid!2sid"
           loading="lazy"

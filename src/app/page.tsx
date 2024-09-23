@@ -2,6 +2,7 @@ import BannerCarousel from "@/components/BannerCarousel";
 import MultipleCarousel from "@/components/MultipleCarousel";
 import Link from "next/link";
 import NewsList from "@/components/NewsList";
+import HowtoCarousel from "@/components/HowtoCarousel";
 
 export default function HomePage() {
   return (
@@ -21,17 +22,13 @@ export default function HomePage() {
       <div className="flex flex-col justify-center gap-2 p-2">
         <NewsList int={3} />
         <Link
-          href="/news"
+          href="/blog/news"
           className="border border-2 border-purple-800 rounded-lg text-center"
         >
           See All News
         </Link>
       </div>
-      <div>
-        <h4>
-          <span>How to use the apps</span> <span>See All</span>
-        </h4>
-      </div>
+      <HowtoCarousel/>
     </main>
   );
 }

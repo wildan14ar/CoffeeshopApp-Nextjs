@@ -13,7 +13,7 @@ export default function ValidationAge({
 
   useEffect(() => {
     // Cek apakah pengguna sudah validasi umur dengan local storage
-    const ageValidated = localStorage.getItem("ageValidated");
+    const ageValidated = sessionStorage.getItem("ageValidated");
     if (ageValidated) {
       setAgeValidated(true);
     }
@@ -21,7 +21,7 @@ export default function ValidationAge({
   }, []);
 
   const handleConfirm = () => {
-    localStorage.setItem("ageValidated", "true");
+    sessionStorage.setItem("ageValidated", "true");
     setAgeValidated(true);
   };
 

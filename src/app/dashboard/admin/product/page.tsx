@@ -1,19 +1,33 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchProducts } from "@/features/productSlice"; // Import Redux action untuk fetch produk
 
 export default function Home() {
-  const dispatch = useDispatch();
-  
-  // Ambil produk, loading, dan error dari Redux store
-  const { products, loading, error } = useSelector((state) => state.products);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Fetch products from the API
   useEffect(() => {
-    dispatch(fetchProducts()); // Fetch produk menggunakan Redux
-  }, [dispatch]);
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch("/api/blog");
+        if (!response.ok) {
+          throw new Error("Failed to fetch products");
+        }
+        const result = await response.json();
+        const products = Object.values(result).flatMap((item) => item.products || []);
+        setProducts(products);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <p>Error: {error}</p>;
@@ -48,7 +62,7 @@ export default function Home() {
             {products.map((product) => (
               <tr key={product.id} className="hover:bg-gray-50">
                 <td className="py-2 px-4 border-r border-gray-300">{product.name}</td>
-                <td className="py-2 px-4 border-r border-gray-300">{product.description}</td>
+                <td className="py-2 px-4 border-r border-gray-300">{product.description || "No description"}</td>
                 <td className="py-2 px-4 border-r border-gray-300">${product.base_price}</td>
                 <td className="py-2 px-4">
                   <div className="flex space-x-2">

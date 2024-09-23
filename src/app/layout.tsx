@@ -15,10 +15,6 @@ import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import ValidationAge from "@/components/ValidationAge";
 import { usePathname } from "next/navigation";
 
-// Redux toolkit
-import { Provider } from "react-redux";
-import store from "./store";
-
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -31,7 +27,13 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-const dissableNav = ["/login", "/register", "/register/mitra", "/validation", "/cart"];
+const dissableNav = [
+  "/login",
+  "/register",
+  "/register/mitra",
+  "/validation",
+  "/cart",
+];
 
 export default function RootLayout({
   children,
@@ -55,19 +57,15 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Provider store={store}>
-            <div className="flex flex-col">
-              <SessionProviderWrapper>
-                <ValidationAge>
-                  {!dissableNav.includes(pathname) && <Navbar />}
-                  <div className="min-h-screen">
-                  {children}
-                  </div>
-                  {!dissableNav.includes(pathname) && <Footnav />}
-                </ValidationAge>
-              </SessionProviderWrapper>
-            </div>
-          </Provider>
+          <div className="flex flex-col">
+            <SessionProviderWrapper>
+              <ValidationAge>
+                {!dissableNav.includes(pathname) && <Navbar />}
+                <div className="min-h-screen">{children}</div>
+                {!dissableNav.includes(pathname) && <Footnav />}
+              </ValidationAge>
+            </SessionProviderWrapper>
+          </div>
         </ThemeProvider>
       </body>
     </html>
