@@ -1,5 +1,3 @@
-// Prisma schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,15 +6,6 @@ datasource db {
   provider          = "postgresql"
   url               = env("DATABASE_URL")
   directUrl         = env("DIRECT_URL")
-}
-
-// Model Image
-model Image {
-  id        Int      @id @default(autoincrement())
-  fileName  String
-  fileUrl   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 enum UserRole {
@@ -42,8 +31,8 @@ model User {
   carts         Cart[]    // Relasi ke Cart
   orders        Order[]   // Relasi ke Order
   reviews       ReviewProduct[]
+  transactions  Transaction[]  // Relasi ke Transaction
 }
-
 
 // Model Account
 model Account {
@@ -98,6 +87,8 @@ model Store {
   details     StoreDetails?
   products    Product[]
   orders      Order[]      // Relasi ke Order
+  carts       Cart[]       // Relasi ke Cart
+  transactions Transaction[] // Relasi ke Transaction
 }
 
 // Model StoreDetails
@@ -147,20 +138,23 @@ model ProductOptionValue {
   additional_price  Float               @default(0.00)
   option            ProductOption       @relation(fields: [optionId], references: [id])
   optionId          Int
-  orderItemOptions  OrderItemOption[]  // Relation to OrderItemOption
+  orderItemOptions  OrderItemOption[]   // Relasi ke OrderItemOption
+  cartItemOptions   CartItemOption[]    // Relasi ke CartItemOption
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
-  cartItemOptions   CartItemOption[]   // Relation to CartItemOption
 }
 
 // Model Cart
 model Cart {
   id        Int      @id @default(autoincrement())
-  userId    String   @unique // Setiap user hanya bisa memiliki satu cart
+  userId    String   // Relasi ke Store
   user      User     @relation(fields: [userId], references: [id])
+  storeId   Int      // Relasi ke Store
+  store     Store    @relation(fields: [storeId], references: [id])
   cartItems CartItem[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  @@unique([userId, storeId])
 }
 
 // Model CartItem
@@ -191,18 +185,17 @@ model CartItemOption {
 // Model Order
 model Order {
   id          Int          @id @default(autoincrement())
-  userId      String    // Pastikan ini bertipe Int jika merujuk ke id User
-  user        User   @relation(fields: [userId], references: [id])
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
+  storeId     Int          // Relasi ke Store
+  store       Store        @relation(fields: [storeId], references: [id])
   orderItems  OrderItem[]
   totalPrice  Float        // Total harga dari semua item di order
   status      String       // Status dari pesanan (e.g., 'pending', 'paid', 'shipped')
-  storeId     Int          // Tambahkan field ini untuk relasi ke Store
-  store       Store        @relation(fields: [storeId], references: [id])
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   transactions Transaction[] // Relasi ke transaksi pembayaran
 }
-
 
 // Model OrderItem
 model OrderItem {
@@ -227,12 +220,25 @@ model OrderItemOption {
 
 // Model Transaction
 model Transaction {
-  id        Int      @id @default(autoincrement())
-  orderId   Int
-  order     Order    @relation(fields: [orderId], references: [id])
-  amount    Float    // Total pembayaran
-  status    String   // Status transaksi (e.g., 'pending', 'paid', 'failed')
+  id            Int      @id @default(autoincrement())
+  orderId       Int
+  order         Order    @relation(fields: [orderId], references: [id])
+  storeId       Int      // Relasi ke Store
+  store         Store    @relation(fields: [storeId], references: [id])
+  userId        String   // Relasi ke User
+  user          User     @relation(fields: [userId], references: [id])
+  amount        Float    // Total pembayaran
+  status        String   // Status transaksi (e.g., 'pending', 'paid', 'failed')
   paymentProvider String // e.g., 'Xendit'
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Model Image
+model Image {
+  id        Int      @id @default(autoincrement())
+  fileName  String
+  fileUrl   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -251,9 +257,9 @@ model Blogs {
   description String
   image_url   String
   content     String       
-  category    BlogCategory // Menambahkan kategori untuk blog
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  category    BlogCategory  // Menambahkan kategori untuk blog
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 // Model ReviewProduct
@@ -272,6 +278,4 @@ model ReviewProduct {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   // Relasi dengan Product
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, productId]) // Setiap user hanya bisa memberi review satu kali untuk setiap produk
 }

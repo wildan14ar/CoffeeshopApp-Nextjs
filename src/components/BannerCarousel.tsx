@@ -54,7 +54,7 @@ export default function BannerCarousel() {
         {slides.length > 0 &&
           slides.map((slide, index) => (
             <SwiperSlide key={index}>
-              <div className="w-full h-[200px] sm:h-[350px] lg:h-[400px]">
+              <div className="w-full h-[180px] sm:h-[330px] lg:h-[380px]">
                 <img
                   src={slide}
                   alt={`Slide ${index + 1}`}

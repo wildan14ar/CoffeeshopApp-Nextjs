@@ -5,37 +5,37 @@ import { getToken } from "next-auth/jwt";
 // GET Products grouped by Store
 export async function GET() {
   try {
-      const products = await prisma.product.findMany({
+    const products = await prisma.product.findMany({
+      select: {
+        id: true,
+        name: true,
+        base_price: true,
+        image_url: true,
+        store: {
           select: {
-              id: true,
-              name: true,
-              base_price: true,
-              image_url: true,
-              store: {
-                  select: {
-                      id: true,
-                      name: true,
-                  },
-              },
+            id: true,
+            name: true,
           },
-      })
+        },
+      },
+    })
 
-      // Group products by store
-      const groupedProducts = products.reduce((acc, product) => {
-          const storeId = product.store.id;
-          if (!acc[storeId]) {
-              acc[storeId] = {
-                  store: product.store,
-                  products: [],
-              };
-          }
-          acc[storeId].products.push(product);
-          return acc;
-      }, {});
+    // Group products by store
+    const groupedProducts = products.reduce((acc, product) => {
+      const storeId = product.store.id;
+      if (!acc[storeId]) {
+        acc[storeId] = {
+          store: product.store,
+          products: [],
+        };
+      }
+      acc[storeId].products.push(product);
+      return acc;
+    }, {});
 
-      return NextResponse.json(groupedProducts);
+    return NextResponse.json(groupedProducts);
   } catch (error) {
-      return NextResponse.json({ error: 'Error fetching products' }, { status: 500 });
+    return NextResponse.json({ error: 'Error fetching products' }, { status: 500 });
   }
 }
 
@@ -98,8 +98,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating product:', error);
     return NextResponse.json({ error: 'Error creating product', details: error.message }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }
 

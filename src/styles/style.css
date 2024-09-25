@@ -1,3 +1,9 @@
+* {
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box;
+}
+
 .gradient-text {
   background: linear-gradient(to right, #8b5cf6, #ec4899); /* Gradient from purple to pink */
   -webkit-background-clip: text;

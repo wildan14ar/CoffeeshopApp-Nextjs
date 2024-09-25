@@ -25,14 +25,14 @@ export default function DashboardPage() {
       </div>
       <ul className="flex flex-col justify-center items-center gap-3 px-3 text-center font-bold text-black">
         <Link
-          href="/profile"
+          href="/dashboard/profile"
           className="rounded bg-purple-500 p-2 w-full text-white"
         >
           Personal
         </Link>
-        {session.user.role === "USER" && (
+        {session.user.role === "MEMBER" && (
           <Link
-            href="/dashboard/admin"
+            href="/dashboard/transaction"
             className="rounded bg-purple-500 p-2 w-full text-white"
           >
             Transaction History
@@ -43,7 +43,7 @@ export default function DashboardPage() {
             href="/dashboard/admin"
             className="rounded bg-purple-500 p-2 w-full text-white"
           >
-            Manager Dashboard
+            Admin Dashboard
           </Link>
         )}
         {session.user.role === "MANAGER" && (

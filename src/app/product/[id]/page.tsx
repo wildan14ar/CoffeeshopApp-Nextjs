@@ -113,20 +113,20 @@ export default function ProductPage({ params }) {
             {product.options.map((option) => (
               <div key={option.id} className="mb-2">
                 <h3 className="font-medium">{option.name}</h3>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-col gap-2">
                   {option.values.map((value) => (
                     <div
                       key={value.id}
                       onClick={() => handleOptionChange(option.id, value.id)}
-                      className={`cursor-pointer border rounded p-2 ${
+                      className={`cursor-pointer border rounded p-2 w-full flex flex-row justify-between ${
                         selectedOptions[option.id] === value.id
                           ? "bg-blue-500 text-white"
                           : "bg-white text-black"
                       }`}
                     >
-                      {value.value}{" "}
+                      <span>{value.value}</span>
                       {value.additional_price >=
-                        1 && <>(+Rp {value.additional_price})</>}
+                        1 && <span>(+Rp {value.additional_price})</span>}
                     </div>
                   ))}
                 </div>

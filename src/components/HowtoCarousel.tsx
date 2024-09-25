@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination } from "swiper/modules";
 import Link from "next/link";
 
 // Import Swiper styles
@@ -41,20 +40,11 @@ export default function HowtoCarousel() {
       <Swiper
         spaceBetween={30}
         slidesPerView={1}
-        loop={true}
-        autoplay={{
-          delay: 3000,
-          disableOnInteraction: false,
-        }}
-        pagination={{
-          clickable: true,
-        }}
-        modules={[Autoplay, Pagination]}
       >
         {slides.length > 0 &&
           slides.map((slide, index) => (
             <SwiperSlide key={index}>
-              <div className="w-full h-[220px] sm:h-[370px] lg:h-[420px]">
+              <div className="w-full h-[250px] sm:h-[400px] lg:h-[450px]">
                 <img
                   src={slide}
                   alt={`Slide ${index + 1}`}

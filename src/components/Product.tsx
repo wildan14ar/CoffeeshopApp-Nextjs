@@ -1,5 +1,4 @@
 import React from "react";
-import { AiOutlineHeart } from "react-icons/ai"; // Example icons
 
 interface ProductCardProps {
   product: {
@@ -13,24 +12,18 @@ interface ProductCardProps {
 
 const Product: React.FC<ProductCardProps> = ({ product }) => {
   return (
-    <div className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+    <div className="flex flex-row h-[95px] p-2 gap-2 bg-zinc-900 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 items-stretch">
       {/* Image */}
-      <div className="relative">
-        <img 
-          src={product.image} 
-          alt={product.name} 
-          className="w-16 h-16 object-cover rounded-full"
-        />
-      </div>
-
+      <img
+        src={product.image_url}
+        alt={product.name}
+        className="h-full object-cover rounded w-1/5"
+      />
       {/* Product details */}
-      <div className="flex-1">
+      <div className="flex flex-col w-4/5 gap-1">
         <h2 className="text-lg font-semibold">{product.name}</h2>
-      </div>
-
-      {/* Icons */}
-      <div className="flex items-center space-x-4 text-gray-400">
-        <AiOutlineHeart className="w-5 h-5 hover:text-red-500 cursor-pointer" />
+        {/* Icons */}
+        <h3>{product.base_price}</h3>
       </div>
     </div>
   );

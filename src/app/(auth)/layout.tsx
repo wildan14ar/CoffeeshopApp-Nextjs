@@ -3,6 +3,7 @@
 import { signIn } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { FaGoogle } from "react-icons/fa6";
 
 export default function AuthLayout({
   children,
@@ -22,9 +23,9 @@ export default function AuthLayout({
           <>
             <button
               onClick={() => signIn("google")}
-              className="w-full max-w-sm p-3 mx-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-colors"
+              className="w-full flex flex-row items-center justify-center gap-2 max-w-sm p-3 mx-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-colors"
             >
-              {isLoginPage ? "Sign In With Google" : "Sign Up With Google"}
+              <FaGoogle /> Continue With Google
             </button>
             <p className="mt-4 text-sm text-gray-600">
               {isLoginPage ? (

@@ -15,7 +15,7 @@ export default function ProductsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("/api/blog");
+        const response = await fetch("/api/product");
         if (!response.ok) {
           throw new Error("Failed to fetch products");
         }

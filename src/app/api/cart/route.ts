@@ -14,7 +14,8 @@ export async function GET(req) {
 
   const userId = token.sub;
 
-  const cart = await prisma.cart.findUnique({
+  // Fetch all carts for the user, grouped by store
+  const carts = await prisma.cart.findMany({
     where: { userId },
     include: {
       cartItems: {
@@ -30,49 +31,43 @@ export async function GET(req) {
     }
   });
 
-  if (!cart) {
-    return new Response("Cart not found", { status: 404 });
+  // Calculate total base price for each cart item including options
+  for (const cart of carts) {
+    let totalPrice = 0;
+
+    cart.cartItems = await Promise.all(cart.cartItems.map(async (item) => {
+      const optionValues = await prisma.productOptionValue.findMany({
+        where: {
+          id: {
+            in: item.options.map(opt => opt.optionValueId)
+          }
+        },
+        select: {
+          id: true,
+          additional_price: true
+        }
+      });
+
+      const totalAdditionalPrice = optionValues.reduce((sum, optionValue) => {
+        return sum + optionValue.additional_price;
+      }, 0);
+
+      const basePrice = item.product.base_price + totalAdditionalPrice;
+      const totalBasePrice = basePrice * item.quantity;
+
+      totalPrice += totalBasePrice;
+
+      return {
+        ...item,
+        totalBasePrice
+      };
+    }));
+
+    cart.totalPrice = totalPrice; // Add total price to each cart
   }
 
-  // Calculate total base price for each cart item including options
-  let totalPrice = 0;
-
-  cart.cartItems = await Promise.all(cart.cartItems.map(async (item) => {
-    const optionValues = await prisma.productOptionValue.findMany({
-      where: {
-        id: {
-          in: item.options.map(opt => opt.optionValueId)
-        }
-      },
-      select: {
-        id: true,
-        additional_price: true
-      }
-    });
-
-    const totalAdditionalPrice = optionValues.reduce((sum, optionValue) => {
-      return sum + optionValue.additional_price;
-    }, 0);
-
-    const basePrice = item.product.base_price + totalAdditionalPrice;
-    const totalBasePrice = basePrice * item.quantity;
-
-    // Tambahkan totalBasePrice ke totalPrice
-    totalPrice += totalBasePrice;
-
-    return {
-      ...item,
-      totalBasePrice
-    };
-  }));
-
-  // Tambahkan total price ke response JSON
-  return new Response(JSON.stringify({
-    ...cart,
-    totalPrice // Total harga dari semua item di keranjang
-  }), { status: 200 });
+  return new Response(JSON.stringify(carts), { status: 200 });
 }
-
 
 export async function POST(req) {
   const token = await getToken({ req, secret });
@@ -84,23 +79,41 @@ export async function POST(req) {
   const { productId, quantity = 1, options = [] } = await req.json();
   const userId = token.sub;
 
-  // Temukan produk berdasarkan ID
-  const product = await prisma.product.findUnique({ where: { id: productId } });
+  // Find the product based on ID
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    include: {
+      store: true // Include the store relation
+    }
+  });
+
   if (!product) {
     return new Response("Product not found", { status: 404 });
   }
 
-  // Temukan atau buat cart berdasarkan userId
-  let cart = await prisma.cart.findUnique({ where: { userId } });
+  // Find or create a cart based on userId and storeId
+  let cart = await prisma.cart.findUnique({
+    where: {
+      userId_storeId: {
+        userId,
+        storeId: product.storeId // Get storeId from the product
+      }
+    }
+  });
 
   if (!cart) {
-    cart = await prisma.cart.create({ data: { userId } });
+    cart = await prisma.cart.create({
+      data: {
+        userId,
+        storeId: product.storeId // Set storeId when creating the cart
+      }
+    });
   }
 
-  // Urutkan array options berdasarkan optionValueId
+  // Sort the array of options based on optionValueId
   const sortedOptions = [...options].sort((a, b) => a.optionValueId - b.optionValueId);
 
-  // Hitung total base price
+  // Calculate the total base price
   const basePrice = product.base_price || 0;
   const optionsTotal = sortedOptions.reduce((total, option) => total + (option.additionalPrice || 0), 0);
   const totalBasePrice = (basePrice + optionsTotal) * quantity;
@@ -109,7 +122,7 @@ export async function POST(req) {
     return new Response("Invalid totalBasePrice calculation", { status: 400 });
   }
 
-  // Buat CartItem baru
+  // Create a new CartItem
   const newCartItem = await prisma.cartItem.create({
     data: {
       cartId: cart.id,
@@ -149,9 +162,7 @@ export async function PATCH(req) {
       return new Response("Invalid quantity", { status: 400 });
     }
 
-    console.log("Request body:", { cartItemId, productId, quantity });
-
-    // Temukan produk untuk mendapatkan base_price
+    // Find product to get base_price
     const product = await prisma.product.findUnique({
       where: { id: productId },
     });
@@ -160,7 +171,7 @@ export async function PATCH(req) {
       return new Response("Product not found", { status: 404 });
     }
 
-    // Hitung total base price
+    // Calculate total base price
     const basePrice = product.base_price || 0;
     const totalBasePrice = basePrice * quantity;
 
@@ -169,14 +180,14 @@ export async function PATCH(req) {
     }
 
     if (quantity === 0) {
-      // Hapus item dari keranjang jika kuantitasnya 0
+      // Remove item from cart if quantity is 0
       await prisma.cartItem.delete({
         where: { id: cartItemId },
       });
 
       return new Response("Cart item removed", { status: 200 });
     } else {
-      // Update hanya kuantitas dan total base price dari CartItem
+      // Update only quantity and total base price of CartItem
       const updatedCartItem = await prisma.cartItem.update({
         where: { id: cartItemId },
         data: {
@@ -193,4 +204,3 @@ export async function PATCH(req) {
     return new Response("Internal server error", { status: 500 });
   }
 }
-

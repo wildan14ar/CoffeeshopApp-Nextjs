@@ -12,10 +12,10 @@ export default function NewsList({ int }) {
   }, []);
 
   return (
-    <ul className="flex flex-col justify-center w-full gap-2">
+    <ul className="flex flex-wrap justify-center w-full gap-2">
       {blogs.slice(0, int || blogs.length).map((blog) => (
         <Link href={`/blog/${blog.id}`} key={blog.id}>
-          <li className="w-full h-[80px] flex flex-row gap-2 bg-zinc-900 rounded shadow-md">
+          <li className="w-full max-w-[400px] h-[80px] flex flex-row gap-2 bg-zinc-900 rounded shadow-md">
             <img
               src={blog.image_url}
               alt={blog.name}
@@ -25,7 +25,16 @@ export default function NewsList({ int }) {
               <h4 className="text-lg font-bold text-white truncate">
                 {blog.name}
               </h4>
-              <p className="text-sm text-gray-400 truncate">
+              <p
+                className="text-sm text-gray-400"
+                style={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
                 {blog.description}
               </p>
             </div>

@@ -1,25 +1,14 @@
-// components/ProductForm.js
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useDispatch, useSelector } from "react-redux";
 import Upload from "@/components/atoms/Upload";
-import {
-  fetchProductById,
-  createProduct,
-  updateProduct,
-  deleteProduct,
-} from "@/features/productSlice";
+import Loader from "@/components/atoms/Loader";
+
 
 export default function ProductForm({ productId }) {
   const router = useRouter();
-  const dispatch = useDispatch();
-  const { products, product, loading, error } = useSelector(
-    (state) => state.products
-  );
   const [uploadUrl, setUploadUrl] = useState("");
-
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -27,31 +16,38 @@ export default function ProductForm({ productId }) {
     image_url: "",
     options: [],
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleUpload = (url) => {
-    setUploadUrl(url); // Menyimpan URL gambar yang diterima dari komponen UploadImage
+    setUploadUrl(url); // Set uploaded image URL
     setFormData((prevData) => ({
       ...prevData,
       image_url: url,
     }));
   };
 
+  // Fetch product data by ID when `productId` is provided
   useEffect(() => {
     if (productId) {
-      const existingProduct = products.find((p) => p.id === productId);
-      if (existingProduct) {
-        setFormData(existingProduct);
-      } else {
-        dispatch(fetchProductById(productId));
-      }
+      const fetchProductById = async () => {
+        setLoading(true);
+        try {
+          const response = await fetch(`/api/product/${productId}`);
+          if (!response.ok) {
+            throw new Error("Failed to fetch product data");
+          }
+          const productData = await response.json();
+          setFormData(productData);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchProductById();
     }
-  }, [productId, products, dispatch]);
-
-  useEffect(() => {
-    if (product) {
-      setFormData(product);
-    }
-  }, [product]);
+  }, [productId]);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -146,38 +142,71 @@ export default function ProductForm({ productId }) {
     });
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    if (productId) {
-      dispatch(updateProduct({ id: productId, updatedProduct: formData }));
-    } else {
-      dispatch(createProduct(formData));
+    setLoading(true);
+
+    try {
+      if (productId) {
+        // Update product if `productId` is provided
+        const response = await fetch(`/api/product/${productId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+        if (!response.ok) {
+          throw new Error("Failed to update product");
+        }
+      } else {
+        // Create new product if no `productId`
+        const response = await fetch("/api/product", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+        if (!response.ok) {
+          throw new Error("Failed to create product");
+        }
+      }
+      router.push("/"); // Navigate to homepage after submission
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-    router.push("/"); // Kembali ke halaman utama setelah submit
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (confirm("Are you sure you want to delete this product?")) {
-      dispatch(deleteProduct(productId));
-      router.push("/"); // Kembali ke halaman utama setelah delete
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/product/${productId}`, {
+          method: "DELETE",
+        });
+        if (!response.ok) {
+          throw new Error("Failed to delete product");
+        }
+        router.push("/"); // Navigate to homepage after deletion
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     }
   }
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <Loader />  ;
   if (error) return <p>Error: {error}</p>;
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="max-w-[800px] mx-auto p-4 bg-white shadow-md rounded"
+      className="max-w-[800px] mx-auto p-4 shadow-md rounded"
     >
-      <div className="flex flex-col md:flex-row md:gap-10">
+      <div className="flex flex-col md:gap-10">
         <div>
           <div className="mb-4">
-            <label
-              htmlFor="name"
-              className="block text-gray-700 font-bold mb-2"
-            >
+            <label htmlFor="name" className="block font-bold mb-2">
               Name:
             </label>
             <input
@@ -187,14 +216,14 @@ export default function ProductForm({ productId }) {
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-indigo-100 focus:border-indigo-300"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
             />
           </div>
 
           <div className="mb-4">
             <label
               htmlFor="description"
-              className="block text-gray-700 font-bold mb-2"
+              className="block font-bold mb-2"
             >
               Description:
             </label>
@@ -203,15 +232,12 @@ export default function ProductForm({ productId }) {
               name="description"
               value={formData.description || ""}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-indigo-100 focus:border-indigo-300"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
             />
           </div>
 
           <div className="mb-4">
-            <label
-              htmlFor="base_price"
-              className="block text-gray-700 font-bold mb-2"
-            >
+            <label htmlFor="base_price" className="block font-bold mb-2">
               Base Price:
             </label>
             <input
@@ -221,15 +247,12 @@ export default function ProductForm({ productId }) {
               value={formData.base_price}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-indigo-100 focus:border-indigo-300"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
             />
           </div>
 
           <div className="mb-4">
-          <label
-              htmlFor="image_url"
-              className="block text-gray-700 font-bold mb-2"
-            >
+            <label htmlFor="image_url" className="block font-bold mb-2">
               Image:
             </label>
             {uploadUrl && (
@@ -247,9 +270,7 @@ export default function ProductForm({ productId }) {
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-700 font-bold mb-2">
-              Options:
-            </label>
+            <label className="block font-bold mb-2">Options:</label>
             {formData.options.map((option, optionIndex) => (
               <div key={optionIndex} className="mb-4">
                 <input
@@ -284,8 +305,10 @@ export default function ProductForm({ productId }) {
                     />
                     <button
                       type="button"
-                      onClick={() => removeOptionValue(optionIndex, valueIndex)}
-                      className="bg-red-500 text-white px-3 py-1 rounded"
+                      onClick={() =>
+                        removeOptionValue(optionIndex, valueIndex)
+                      }
+                      className="px-3 py-2 bg-red-500 text-white rounded-md"
                     >
                       Remove Value
                     </button>
@@ -294,14 +317,14 @@ export default function ProductForm({ productId }) {
                 <button
                   type="button"
                   onClick={() => addOptionValue(optionIndex)}
-                  className="bg-green-500 text-white px-3 py-1 rounded"
+                  className="px-3 py-2 bg-blue-500 text-white rounded-md"
                 >
                   Add Value
                 </button>
                 <button
                   type="button"
                   onClick={() => removeOption(optionIndex)}
-                  className="bg-red-500 text-white px-3 py-1 rounded mt-2"
+                  className="ml-2 px-3 py-2 bg-red-500 text-white rounded-md"
                 >
                   Remove Option
                 </button>
@@ -310,29 +333,29 @@ export default function ProductForm({ productId }) {
             <button
               type="button"
               onClick={addOption}
-              className="bg-green-500 text-white px-3 py-1 rounded"
+              className="px-3 py-2 bg-blue-500 text-white rounded-md"
             >
               Add Option
             </button>
           </div>
-        </div>
 
-        <div className="flex flex-col gap-4">
-          <button
-            type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-          >
-            {productId ? "Update Product" : "Create Product"}
-          </button>
-          {productId && (
+          <div className="flex w-full justify-end gap-4">
+            {productId && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-500 text-white rounded-md"
+              >
+                Delete
+              </button>
+            )}
             <button
-              type="button"
-              onClick={handleDelete}
-              className="bg-red-500 text-white px-4 py-2 rounded"
+              type="submit"
+              className=" w-full px-4 py-2 bg-green-500 text-white rounded-md"
             >
-              Delete Product
+              {productId ? "Update Product" : "Create Product"}
             </button>
-          )}
+          </div>
         </div>
       </div>
     </form>

@@ -27,12 +27,11 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-const dissableNav = [
+const dissableRoutes = [
   "/login",
   "/register",
-  "/register/mitra",
-  "/validation",
   "/cart",
+  "/dashboard", // Any URL starting with /dashboard
 ];
 
 export default function RootLayout({
@@ -41,6 +40,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
+
+  // Check if pathname starts with any of the routes in dissableRoutes
+  const shouldDisableNavbar = dissableRoutes.some(route => pathname.startsWith(route));
+  const shouldDisableFootnav = dissableRoutes.some(route => pathname.startsWith(route));
 
   return (
     <html lang="en">
@@ -60,9 +63,9 @@ export default function RootLayout({
           <div className="flex flex-col">
             <SessionProviderWrapper>
               <ValidationAge>
-                {!dissableNav.includes(pathname) && <Navbar />}
+                {!shouldDisableNavbar && <Navbar />}
                 <div className="min-h-screen">{children}</div>
-                {!dissableNav.includes(pathname) && <Footnav />}
+                {!shouldDisableFootnav && <Footnav />}
               </ValidationAge>
             </SessionProviderWrapper>
           </div>

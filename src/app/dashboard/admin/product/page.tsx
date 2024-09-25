@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Loader from "@/components/atoms/Loader";
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -29,14 +30,14 @@ export default function Home() {
     fetchProducts();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <Loader />;
   if (error) return <p>Error: {error}</p>;
 
   return (
     <main>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Product List</h1>
-        <Link href="/products/new" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+        <Link href="/dashboard/admin/product/new" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
           Add New Product
         </Link>
       </div>

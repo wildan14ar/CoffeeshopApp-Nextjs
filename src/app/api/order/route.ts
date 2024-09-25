@@ -1,108 +1,82 @@
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+// /app/api/order/route.js
+import prisma from '@lib/prisma';
 import { getToken } from 'next-auth/jwt';
-import { xenditCreateInvoice } from '@/lib/xendit'; // Import Xendit invoice creation function
-import { sendOrderStatusUpdate } from '@/lib/websocket'; // Import WebSocket function for real-time update
 
-export async function POST(req: Request) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-
+export async function POST(req) {
+  const token = await getToken({ req });
   if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
   }
 
-  const { storeId, cartId, paymentMethod, address } = await req.json();
-  const userId = token.id;
+  const { storeId } = await req.json();
 
-  // Fetch cart items along with product and options
-  const cartItems = await prisma.cartItem.findMany({
-    where: { cartId },
-    include: {
-      product: true,
-      options: { include: { optionValue: true } },
-    },
-  });
+  try {
+    const userId = token.sub;
 
-  if (!cartItems.length) return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
-
-  // Calculate total price
-  let totalPrice = 0;
-  const orderItemsData = cartItems.map((item) => {
-    // Calculate price for each item, including option values
-    let itemTotalPrice = item.totalBasePrice;
-    item.options.forEach((opt) => {
-      itemTotalPrice += opt.optionValue.additional_price;
+    // Retrieve the user's cart with items
+    const cart = await prisma.cart.findUnique({
+      where: {
+        userId_storeId: {
+          userId,
+          storeId
+        }
+      },
+      include: {
+        cartItems: {
+          include: {
+            product: true,
+            options: {
+              include: {
+                optionValue: true
+              }
+            }
+          }
+        }
+      }
     });
 
-    totalPrice += itemTotalPrice * item.quantity;
+    if (!cart || cart.cartItems.length === 0) {
+      return new Response(JSON.stringify({ message: 'Cart is empty' }), { status: 400 });
+    }
 
-    return {
-      productId: item.productId,
-      quantity: item.quantity,
-      price: itemTotalPrice, // Final price with options
-      options: {
-        create: item.options.map((opt) => ({
-          optionValueId: opt.optionValueId,
-        })),
-      },
-    };
-  });
+    // Calculate total price
+    const totalPrice = cart.cartItems.reduce((sum, item) => {
+      return sum + (item.totalBasePrice + item.options.reduce((optSum, option) => optSum + option.optionValue.additional_price, 0)) * item.quantity;
+    }, 0);
 
-  // Create the order in the database
-  const order = await prisma.order.create({
-    data: {
-      userId,
-      storeId,
-      status: 'PENDING',
-      totalPrice,
-      orderItems: {
-        create: orderItemsData,
-      },
-    },
-  });
+    // Create the order
+    const order = await prisma.order.create({
+      data: {
+        userId,
+        storeId,
+        totalPrice,
+        status: 'pending',
+        orderItems: {
+          create: cart.cartItems.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.totalBasePrice + item.options.reduce((optSum, option) => optSum + option.optionValue.additional_price, 0),
+            options: {
+              create: item.options.map((option) => ({
+                optionValueId: option.optionValueId
+              }))
+            }
+          }))
+        }
+      }
+    });
 
-  // Clear the cart after creating the order
-  await prisma.cartItem.deleteMany({ where: { cartId } });
+    // Clear the user's cart after order creation
+    await prisma.cartItem.deleteMany({
+      where: {
+        cartId: cart.id
+      }
+    });
 
-  // Create a Xendit invoice
-  const invoice = await xenditCreateInvoice({
-    external_id: `order-${order.id}`,
-    payer_email: token.email,
-    description: `Order #${order.id}`,
-    amount: totalPrice,
-    payment_method: paymentMethod, // Use the selected payment method
-  });
-
-  // Save the transaction data in the database
-  await prisma.transaction.create({
-    data: {
-      orderId: order.id,
-      amount: totalPrice,
-      status: 'PENDING',
-      paymentProvider: 'Xendit',
-    },
-  });
-
-  // Trigger WebSocket event for real-time status update
-  sendOrderStatusUpdate(order.id, 'PENDING');
-
-  return NextResponse.json({
-    order,
-    invoice, // Return the invoice details to the client
-  });
-}
-
-export async function POST(req: Request) {
-  const { orderId, status } = await req.json();
-
-  // Update order status
-  const order = await prisma.order.update({
-    where: { id: orderId },
-    data: { status },
-  });
-
-  // Trigger WebSocket update
-  sendOrderStatusUpdate(orderId, status);
-
-  return NextResponse.json(order);
+    // Returning the created order
+    return new Response(JSON.stringify(order), { status: 201 });
+  } catch (error) {
+    console.error(error);
+    return new Response(JSON.stringify({ message: 'Failed to create order' }), { status: 500 });
+  }
 }

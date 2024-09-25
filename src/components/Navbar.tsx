@@ -9,7 +9,7 @@ export default function Navbar() {
   const isLoggedIn = status === "authenticated";
 
   return (
-    <nav className="sticky bg-white dark:bg-black top-0 w-full py-2 px-3 hidden md:flex flex-row items-center justify-between z-10 border-b-4 border-b-slate-300">
+    <nav className="sticky bg-white dark:bg-black top-0 w-full py-2 px-3 hidden md:flex flex-row items-center justify-between z-10">
       <Link href="/">
         <h1 className="text-3xl font-bold flex flex-row gradient-text">
           Vapmart

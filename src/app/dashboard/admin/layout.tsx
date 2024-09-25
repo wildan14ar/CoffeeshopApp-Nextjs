@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default function ManagerLayout({
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -9,14 +9,14 @@ export default function ManagerLayout({
     <div className="w-full h-screen flex flex-col lg:flex-row">
       {/* Sidebar */}
       <ul className="w-full lg:w-1/5 bg-slate-900 p-4 space-y-4 lg:space-y-6">
-        <Link href="/dashboard/manager">
+        <Link href="/">
           <li className="text-white text-lg hover:text-gray-400 cursor-pointer">Home</li>
         </Link>
-        <Link href="/dashboard/manager">
+        <Link href="/dashboard/admin">
           <li className="text-white text-lg hover:text-gray-400 cursor-pointer">Dashboard</li>
         </Link>
-        <Link href="/dashboard/manager/blog">
-          <li className="text-white text-lg hover:text-gray-400 cursor-pointer">Products</li>
+        <Link href="/dashboard/admin/product">
+          <li className="text-white text-lg hover:text-gray-400 cursor-pointer">Blogs</li>
         </Link>
       </ul>
       
