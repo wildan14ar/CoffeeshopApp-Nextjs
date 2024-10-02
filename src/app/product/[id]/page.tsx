@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { FaCircleMinus, FaCirclePlus } from "react-icons/fa6";
-import { FaRegHeart } from "react-icons/fa";
 import Loader from "@/components/atoms/Loader";
 import { BackButtonX } from "@/components/atoms/ButtonBack";
+import FavoriteProduct from "@/components/atoms/FavoriteProduct";
 
 export default function ProductPage({ params }) {
   const [product, setProduct] = useState(null);
@@ -20,6 +20,18 @@ export default function ProductPage({ params }) {
         const response = await fetch(`/api/product/${params.id}`);
         const data = await response.json();
         setProduct(data);
+
+        // Set default options to the first available option value
+        const defaultOptions = {};
+        if (data.options) {
+          data.options.forEach(option => {
+            if (option.values.length > 0) {
+              defaultOptions[option.id] = option.values[0].id; // Set the first value as default
+            }
+          });
+        }
+        setSelectedOptions(defaultOptions); // Update selected options with defaults
+
       } catch (error) {
         console.error("Failed to fetch product data:", error);
       }
@@ -66,6 +78,31 @@ export default function ProductPage({ params }) {
     }
   };
 
+  // Function to calculate the total price
+  const calculateTotalPrice = () => {
+    if (!product) return 0;
+
+    let totalPrice = product.base_price * quantity; // Base price multiplied by quantity
+
+    // Add additional price from selected options
+    Object.keys(selectedOptions).forEach((optionId) => {
+      const selectedValueId = selectedOptions[optionId];
+      const option = product.options.find((opt) => opt.id === parseInt(optionId)); // Ensure option ID is an integer
+      
+      // Ensure option is found
+      if (option) {
+        const value = option.values.find((val) => val.id === selectedValueId);
+        
+        // Ensure value is found
+        if (value) {
+          totalPrice += value.additional_price * quantity; // Multiply additional price by quantity
+        }
+      }
+    });
+
+    return totalPrice;
+  };
+
   if (!product) return <Loader />;
 
   return (
@@ -84,12 +121,12 @@ export default function ProductPage({ params }) {
         <h1 className="font-bold text-2xl flex flex-row justify-between items-center">
           <span>{product.name}</span>
           <span>
-            <FaRegHeart />
+            <FavoriteProduct productId={product.id} />
           </span>
         </h1>
         <div className="flex flex-col gap-2 text-lg">
           <div className="font-bold flex flex-row justify-between">
-            <p>Rp {product.base_price}</p>
+            <p>Rp {product.base_price}</p> {/* Display calculated total price */}
             <div className="flex flex-row gap-2 items-center">
               <button
                 onClick={() => setQuantity(quantity > 1 ? quantity - 1 : 1)}
@@ -125,8 +162,7 @@ export default function ProductPage({ params }) {
                       }`}
                     >
                       <span>{value.value}</span>
-                      {value.additional_price >=
-                        1 && <span>(+Rp {value.additional_price})</span>}
+                      {value.additional_price >= 1 && <span>(+Rp {value.additional_price})</span>}
                     </div>
                   ))}
                 </div>
@@ -139,7 +175,7 @@ export default function ProductPage({ params }) {
           className="bg-blue-500 text-white p-2 rounded mt-4"
           disabled={cartLoading}
         >
-          {cartLoading ? "Adding to Cart..." : "Add to Cart"}
+          {cartLoading ? "Adding to Cart..." : `Add to Cart - Rp ${calculateTotalPrice()}`} {/* Display total price on button */}
         </button>
         {cartError && <p className="text-red-500">{cartError}</p>}
       </div>

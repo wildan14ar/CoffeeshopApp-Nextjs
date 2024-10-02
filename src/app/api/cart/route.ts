@@ -1,73 +1,99 @@
-// /app/api/cart/route.js
+import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from "next-auth/jwt";
 import prisma from "@/lib/prisma";
 
-// Secret for JWT token, make sure it's set in your environment variables
 const secret = process.env.NEXTAUTH_SECRET;
 
-export async function GET(req) {
+export async function GET(req: NextRequest) {
   const token = await getToken({ req, secret });
-
-  if (!token || !token.sub) {
-    return new Response("Unauthorized", { status: 401 });
+  if (!token) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const userId = token.sub;
+  const storeId = req.nextUrl.searchParams.get('storeId'); // Ambil storeId dari query jika ada
 
-  // Fetch all carts for the user, grouped by store
-  const carts = await prisma.cart.findMany({
-    where: { userId },
-    include: {
-      cartItems: {
-        include: {
-          product: true,
-          options: {
-            include: {
-              optionValue: true // Include option value details
-            }
-          }
-        }
-      }
-    }
-  });
+  try {
+    let carts;
 
-  // Calculate total base price for each cart item including options
-  for (const cart of carts) {
-    let totalPrice = 0;
-
-    cart.cartItems = await Promise.all(cart.cartItems.map(async (item) => {
-      const optionValues = await prisma.productOptionValue.findMany({
+    if (storeId) {
+      // Jika storeId tersedia, ambil cart untuk store tersebut
+      carts = await prisma.cart.findUnique({
         where: {
-          id: {
-            in: item.options.map(opt => opt.optionValueId)
-          }
+          userId_storeId: {
+            userId,
+            storeId: parseInt(storeId, 10),
+          },
         },
-        select: {
-          id: true,
-          additional_price: true
-        }
+        include: {
+          store: {
+            select: {
+              name: true,
+              address: true,
+            },
+          },
+          cartItems: {
+            include: {
+              product: true,
+              options: {
+                include: {
+                  optionValue: true,
+                },
+              },
+            },
+          },
+        },
       });
 
-      const totalAdditionalPrice = optionValues.reduce((sum, optionValue) => {
-        return sum + optionValue.additional_price;
-      }, 0);
+      if (!carts) {
+        return NextResponse.json({ error: 'Cart not found' }, { status: 404 });
+      }
 
-      const basePrice = item.product.base_price + totalAdditionalPrice;
-      const totalBasePrice = basePrice * item.quantity;
+      if (!carts.cartItems || carts.cartItems.length === 0) {
+        return NextResponse.json({ message: 'Cart is empty' });
+      }
 
-      totalPrice += totalBasePrice;
+      return NextResponse.json({
+        storeName: carts.store.name, // Menyertakan nama store
+        ...carts,
+      });
+    } else {
+      // Jika storeId tidak ada, ambil semua cart dengan userId
+      carts = await prisma.cart.findMany({
+        where: {
+          userId,
+        },
+        include: {
+          store: {
+            select: {
+              name: true,
+            },
+          },
+          cartItems: {
+            include: {
+              product: true,
+              options: {
+                include: {
+                  optionValue: true,
+                },
+              },
+            },
+          },
+        },
+      });
 
-      return {
-        ...item,
-        totalBasePrice
-      };
-    }));
+      if (!carts || carts.length === 0) {
+        return NextResponse.json({ message: 'No carts found' });
+      }
 
-    cart.totalPrice = totalPrice; // Add total price to each cart
+      return NextResponse.json(carts);
+    }
+  } catch (error) {
+    console.error('Error fetching cart:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-
-  return new Response(JSON.stringify(carts), { status: 200 });
 }
+
 
 export async function POST(req) {
   const token = await getToken({ req, secret });

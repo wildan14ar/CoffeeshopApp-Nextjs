@@ -1,77 +1,156 @@
-import HeadingPhone from "@/components/atoms/HeadingPhone";
+"use client";
 
-export default function StorePage() {
-  // Contoh data cabang toko
-  const branches = [
-    {
-      id: 1,
-      name: "Cabang 1",
-      address: "Jalan Mawar No. 1, Jakarta",
-      position: { lat: -6.2, lng: 106.816666 }, // Koordinat Jakarta
-    },
-    {
-      id: 2,
-      name: "Cabang 2",
-      address: "Jalan Melati No. 2, Bandung",
-      position: { lat: -6.917464, lng: 107.619123 }, // Koordinat Bandung
-    },
-    {
-      id: 3,
-      name: "Cabang 3",
-      address: "Jalan Mawar No. 3, Jakarta",
-      position: { lat: -6.2, lng: 106.816666 }, // Koordinat Jakarta
-    },
-    {
-      id: 4,
-      name: "Cabang 4",
-      address: "Jalan Melati No. 4, Bandung",
-      position: { lat: -6.917464, lng: 107.619123 }, // Koordinat Bandung
-    },
-    {
-      id: 1,
-      name: "Cabang 1",
-      address: "Jalan Mawar No. 1, Jakarta",
-      position: { lat: -6.2, lng: 106.816666 }, // Koordinat Jakarta
-    },
-    {
-      id: 2,
-      name: "Cabang 2",
-      address: "Jalan Melati No. 2, Bandung",
-      position: { lat: -6.917464, lng: 107.619123 }, // Koordinat Bandung
-    },
-    {
-      id: 3,
-      name: "Cabang 3",
-      address: "Jalan Mawar No. 3, Jakarta",
-      position: { lat: -6.2, lng: 106.816666 }, // Koordinat Jakarta
-    },
-    {
-      id: 4,
-      name: "Cabang 4",
-      address: "Jalan Melati No. 4, Bandung",
-      position: { lat: -6.917464, lng: 107.619123 }, // Koordinat Bandung
-    },
-  ];
+import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { orderByDistance, getDistance } from "geolib";
+import { GoogleMap, useLoadScript, Marker } from "@react-google-maps/api";
+import HeadingPhone from "@/components/atoms/HeadingPhone";
+import Modal from "@/components/Modal";
+import Loader from "@/components/atoms/Loader";
+
+const StorePage = () => {
+  const [stores, setStores] = useState([]);
+  const [currentPosition, setCurrentPosition] = useState(null);
+  const [mapCenter, setMapCenter] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedStore, setSelectedStore] = useState(null); // Local state for selected store
+
+  const selectedStoreId = useSelector((state: any) => state.store.selectedStoreId); // Retrieve selected store ID from Redux
+
+  useEffect(() => {
+    // Get user's location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setCurrentPosition({ latitude, longitude });
+        },
+        (error) => {
+          console.error("Error obtaining location:", error);
+        },
+        { enableHighAccuracy: true }
+      );
+    }
+
+    // Fetch store data from API
+    const fetchStores = async () => {
+      const response = await fetch("/api/store");
+      const data = await response.json();
+      setStores(data);
+    };
+
+    fetchStores();
+  }, []);
+
+  // Sort stores by distance
+  useEffect(() => {
+    if (currentPosition && stores.length > 0) {
+      const sortedStores = orderByDistance(
+        currentPosition,
+        stores.map((store) => ({
+          latitude: parseFloat(store.details.latitude),
+          longitude: parseFloat(store.details.longitude),
+          key: store.id,
+        }))
+      );
+
+      const nearestStore = stores.find(
+        (store) => store.id === sortedStores[0]?.key
+      );
+      if (nearestStore) {
+        setMapCenter({
+          lat: parseFloat(nearestStore.details.latitude),
+          lng: parseFloat(nearestStore.details.longitude),
+        });
+      }
+    }
+  }, [currentPosition, stores]);
+
+  const handleStoreSelect = (store) => {
+    setSelectedStore(store); // Set selected store in local state
+    setMapCenter({
+      lat: parseFloat(store.details.latitude),
+      lng: parseFloat(store.details.longitude),
+    });
+    setIsModalOpen(true); // Show confirmation modal
+  };
+
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
+  });
+
+  if (!isLoaded || !currentPosition) return <Loader />;
 
   return (
-    <div className="w-full flex flex-col gap-2">
+    <div className="store-page text-white">
       <HeadingPhone name="Store" />
-      <div className="flex flex-col md:flex-row md:mx-auto md:w-4/5 justify-start">
-        <iframe
-          src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d15863.673978198904!2d106.6567018!3d-6.2744472!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69e553aeca8d97%3A0xd3e5d04eb554abde!2sInstitut%20Teknologi%20Tangerang%20Selatan!5e0!3m2!1sid!2sid!4v1725634701747!5m2!1sid!2sid"
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          className="w-full max-w-[500px] min-h-[300px] md:h-[500px] md:w-[500px] rounded"
-        ></iframe>
-        <ul className="flex flex-col">
-          {branches.map((branch) => (
-            <li key={branch.id} className="p-2 border-b border-gray">
-              <h2 className="text-xl font-semibold">{branch.name}</h2>
-              <p>{branch.address}</p>
-            </li>
+      {/* Google Map */}
+      <div className="relative h-64 mb-4">
+        <GoogleMap
+          zoom={14}
+          center={mapCenter}
+          mapContainerStyle={{ height: "100%", width: "100%" }}
+          className="rounded-lg overflow-hidden"
+        >
+          {stores.map((store) => (
+            <Marker
+              key={store.id}
+              position={{
+                lat: parseFloat(store.details.latitude),
+                lng: parseFloat(store.details.longitude),
+              }}
+            />
           ))}
-        </ul>
+        </GoogleMap>
       </div>
+
+      {/* Store List */}
+      <ul className="space-y-4 p-2">
+        {stores.map((store) => (
+          <li
+            key={store.id}
+            onClick={() => handleStoreSelect(store)} // Pass entire store object
+            className={`p-4 bg-gray-800 rounded-lg cursor-pointer ${
+              selectedStoreId === store.id
+                ? "border border-purple-600" // Highlight selected store
+                : "border border-gray-700" // Default border for unselected stores
+            }`}
+          >
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-xl font-semibold">{store.name}</h2>
+              <button className="text-gray-500 hover:text-gray-400">
+                <i className="fas fa-info-circle"></i>
+              </button>
+            </div>
+            <p className="text-sm text-gray-400">{store.address}</p>
+
+            {/* Display distance if available */}
+            {currentPosition &&
+              store.details.latitude &&
+              store.details.longitude && (
+                <p className="text-purple-500 mt-2">
+                  {(
+                    getDistance(currentPosition, {
+                      latitude: parseFloat(store.details.latitude),
+                      longitude: parseFloat(store.details.longitude),
+                    }) / 1000
+                  ).toFixed(2)}{" "}
+                  km away
+                </p>
+              )}
+          </li>
+        ))}
+      </ul>
+
+      {/* Confirmation Modal */}
+      {isModalOpen && (
+        <Modal
+          onClose={() => setIsModalOpen(false)}
+          storeDetails={selectedStore} // Pass the selected store details
+        />
+      )}
     </div>
   );
-}
+};
+
+export default StorePage;

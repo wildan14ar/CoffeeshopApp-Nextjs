@@ -264,18 +264,21 @@ model Blogs {
 
 // Model ReviewProduct
 model ReviewProduct {
-  id        String   @id @default(cuid())
-  userId    String
-  productId Int
-  favorite  Boolean  @default(false)
-  review    Int      @default(0) // Nilai review, bisa disesuaikan rentangnya (misal 1-5)
-  message   String?
+    id        String   @id @default(cuid())
+    userId    String
+    productId Int
+    favorite  Boolean  @default(false)
+    review    Int      @default(0) // Nilai review, bisa disesuaikan rentangnya (misal 1-5)
+    message   String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
-  // Relasi dengan User
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  // Relasi dengan Product
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+    // Relasi dengan User
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    // Relasi dengan Product
+    product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+    @@unique([userId, productId]) // Composite unique constraint
 }
+

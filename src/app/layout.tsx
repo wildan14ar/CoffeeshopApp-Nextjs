@@ -14,6 +14,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import ValidationAge from "@/components/ValidationAge";
 import { usePathname } from "next/navigation";
+import { Provider } from "react-redux";
+import store from "./store";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -42,8 +44,13 @@ export default function RootLayout({
   const pathname = usePathname();
 
   // Check if pathname starts with any of the routes in dissableRoutes
-  const shouldDisableNavbar = dissableRoutes.some(route => pathname.startsWith(route));
-  const shouldDisableFootnav = dissableRoutes.some(route => pathname.startsWith(route));
+  const shouldDisableNavbar = dissableRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
+
+  const shouldDisableFootnav =
+    dissableRoutes.some((route) => pathname.startsWith(route)) ||
+    (pathname.startsWith("/product/") && pathname !== "/product");
 
   return (
     <html lang="en">
@@ -54,22 +61,24 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} dark:bg-black`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <div className="flex flex-col">
-            <SessionProviderWrapper>
-              <ValidationAge>
-                {!shouldDisableNavbar && <Navbar />}
-                <div className="min-h-screen">{children}</div>
-                {!shouldDisableFootnav && <Footnav />}
-              </ValidationAge>
-            </SessionProviderWrapper>
-          </div>
-        </ThemeProvider>
+        <Provider store={store}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <div className="flex flex-col">
+              <SessionProviderWrapper>
+                <ValidationAge>
+                  {!shouldDisableNavbar && <Navbar />}
+                  <div className="min-h-screen">{children}</div>
+                  {!shouldDisableFootnav && <Footnav />}
+                </ValidationAge>
+              </SessionProviderWrapper>
+            </div>
+          </ThemeProvider>
+        </Provider>
       </body>
     </html>
   );

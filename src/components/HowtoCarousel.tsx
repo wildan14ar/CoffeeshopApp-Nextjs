@@ -30,7 +30,7 @@ export default function HowtoCarousel() {
   }, []);
 
   return (
-    <div className="carousel-container w-full max-w-[700px] my-3 px-2 mx-auto">
+    <div className="carousel-container w-full max-w-[700px] my-3 px-2 mx-auto md:hidden">
       <div className="flex flex-row justify-between my-2">
         <h4 className="text-sm">How to use the apps</h4>
         <Link href="/blog/Howto" className="text-sm font-bold text-purple-500">
@@ -44,7 +44,7 @@ export default function HowtoCarousel() {
         {slides.length > 0 &&
           slides.map((slide, index) => (
             <SwiperSlide key={index}>
-              <div className="w-full h-[250px] sm:h-[400px] lg:h-[450px]">
+              <div className="w-full h-[300px] sm:h-[450px] lg:h-[500px]">
                 <img
                   src={slide}
                   alt={`Slide ${index + 1}`}

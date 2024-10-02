@@ -20,7 +20,6 @@ export default function ProductsPage() {
           throw new Error("Failed to fetch products");
         }
         const result = await response.json();
-        console.log(result); // Verify API structure
         setData(result);
       } catch (err) {
         setError(err.message);

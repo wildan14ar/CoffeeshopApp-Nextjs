@@ -1,154 +1,174 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import Image from "next/image";
 import Loader from "@/components/atoms/Loader";
-import { BackButton } from "@/components/atoms/ButtonBack";
-import { CiHeart, CiCirclePlus, CiCircleMinus } from "react-icons/ci";
+import { CiCirclePlus, CiCircleMinus } from "react-icons/ci";
 import HeadingPhone from "@/components/atoms/HeadingPhone";
+import { useRouter } from "next/navigation";
 
 // Cart Page Component
 const CartPage = () => {
-  const [cartData, setCartData] = useState([]); // Initialize with an empty array
+  const router = useRouter();
+  const storeId = useSelector((state) => state.store.selectedStoreId); // Get the selected storeId from Redux
+  const [cartData, setCartData] = useState(null); // Initialize as null to handle loading state
 
   // Fetch cart data from API
   const fetchCart = async () => {
-    const res = await fetch("/api/cart");
-    if (res.ok) {
-      const data = await res.json();
-      setCartData(data);
-      console.log(data);
+    try {
+      const res = await fetch(`/api/cart?storeId=${storeId}`);
+      if (res.ok) {
+        const data = await res.json();
+        console.log("Cart Data:", data); // Log the fetched data
+        setCartData(data);
+      } else {
+        console.error("Failed to fetch cart data:", await res.text());
+      }
+    } catch (error) {
+      console.error("Error fetching cart data:", error);
     }
   };
 
   useEffect(() => {
-    fetchCart();
-  }, []);
+    if (storeId === null) {
+      router.push(`/store`);
+    } else {
+      fetchCart();
+    }
+  }, [storeId]);
 
-  // Handle Quantity Change
+  // Function to handle quantity changes
   const handleQuantityChange = async (cartItemId, productId, quantity) => {
     if (quantity < 0) return; // Don't allow quantity below 0
 
-    // Send PATCH request to update quantity
-    const res = await fetch(`/api/cart`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cartItemId, productId, quantity }),
-    });
+    try {
+      const res = await fetch(`/api/cart`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cartItemId, productId, quantity }),
+      });
 
-    if (res.ok) {
-      fetchCart(); // Fetch the updated cart after quantity change
-    } else {
-      console.error("Failed to update quantity:", await res.text());
+      if (res.ok) {
+        fetchCart(); // Fetch the updated cart after quantity change
+      } else {
+        console.error("Failed to update quantity:", await res.text());
+      }
+    } catch (error) {
+      console.error("Error updating quantity:", error);
     }
   };
 
-  if (!cartData.length) return <Loader />;
+  if (!cartData) {
+    return <Loader />; // Show loader until cartData is fetched
+  }
 
-  // Group cart items by storeId
-  const stores = cartData.reduce((acc, cart) => {
-    const storeId = cart.storeId;
-    if (!acc[storeId]) {
-      acc[storeId] = { cartItems: [], totalPrice: 0 };
-    }
-    acc[storeId].cartItems.push(...cart.cartItems);
-    acc[storeId].totalPrice += cart.totalPrice;
-    return acc;
-  }, {});
-
-  // Calculate total price of all stores
-  const totalCartPrice = Object.values(stores).reduce((total, storeData) => {
-    return total + storeData.totalPrice;
+  // Calculate the total price for the cart
+  const totalCartPrice = cartData.cartItems.reduce((total, item) => {
+    const basePrice = item.totalBasePrice; // Base price of the product
+    const optionsTotal = item.options.reduce(
+      (acc, option) => acc + option.optionValue.additional_price,
+      0
+    );
+    return total + basePrice + optionsTotal * item.quantity;
   }, 0);
 
   return (
     <div className="w-full bg-zinc-950">
-      {/* Store Info */}
       <HeadingPhone name="Review Order" />
+      <div className="p-3 bg-zinc-900 flex flex-col gap-2">
+        <h2 className="font-bold">Market Store: {cartData.storeName}</h2>
+        <p>Address: {cartData.store.address}</p>
+      </div>
 
       <div className="flex flex-col justify-between">
-        {Object.entries(stores).map(([storeId, storeData]) => (
-          <div key={storeId} className="flex flex-col">
-            {/* Store Header */}
-            <div className="w-full p-3">
-              <h3 className="text-lg font-bold">Store {storeId}</h3>
-            </div>
+        {/* Display each cart item */}
+        {cartData.cartItems.map((item) => {
+          const product = item.product;
+          const optionsTotal = item.options.reduce(
+            (acc, option) => acc + option.optionValue.additional_price,
+            0
+          );
 
-            <div className="flex flex-col gap-3 bg-black">
-              {/* Cart Items for this store */}
-              {storeData.cartItems.length > 0 ? (
-                storeData.cartItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex flex-row h-[130px] w-full gap-3 border-b-2 border-gray-500 py-3 px-3"
-                  >
-                    <Image
-                      src={item.product.image_url}
-                      alt={item.product.name}
-                      width={50}
-                      height={50}
-                      className="h-full w-1/4 rounded"
-                    />
-                    <div className="w-3/4 flex flex-col gap-1">
-                      <h4 className="font-bold">
-                        {item.product.name} (<span>{item.quantity}</span>)
-                      </h4>
-                      <p>
-                        Base Price: Rp.{" "}
-                        {item.product?.base_price?.toLocaleString() || "N/A"}
-                      </p>
-                      <p>
-                        Total: Rp.{" "}
-                        {item?.totalBasePrice?.toLocaleString() || "N/A"}
-                      </p>
+          return (
+            <div
+              key={item.id}
+              className="flex flex-row max-h-max w-full gap-3 border-b-2 border-gray-500 py-3 px-3"
+            >
+              {/* Product Image */}
+              <Image
+                src={product.image_url}
+                alt={product.name}
+                width={50}
+                height={50}
+                className="h-full w-1/4 rounded"
+              />
 
-                      <div className="flex flex-row items-center justify-start space-x-2 text-xl font-bold">
-                        <button>
-                          <CiHeart />
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleQuantityChange(
-                              item.id,
-                              item.productId,
-                              item.quantity - 1
-                            )
-                          }
-                        >
-                          <CiCircleMinus />
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleQuantityChange(
-                              item.id,
-                              item.productId,
-                              item.quantity + 1
-                            )
-                          }
-                        >
-                          <CiCirclePlus />
-                        </button>
-                      </div>
-                    </div>
+              {/* Product Info */}
+              <div className="w-3/4 flex flex-col gap-1">
+                <h4 className="font-bold">
+                  {product.name} (<span>{item.quantity}</span>)
+                </h4>
+                <p>Base Price: Rp. {product.base_price.toLocaleString()}</p>
+
+                {/* Display Options with Additional Prices */}
+                {item.options.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    <h5>Options:</h5>
+                    {item.options.map((option) => (
+                      <p key={option.id} className="p-1 text-xs bg-gray-200 text-black max-w-max max-h-max rounded-sm">
+                        {option.optionValue.value} (+Rp.{" "}
+                        {option.optionValue.additional_price.toLocaleString()})
+                      </p>
+                    ))}
                   </div>
-                ))
-              ) : (
-                <p>Your cart is empty for this store.</p>
-              )}
-            </div>
+                )}
 
-            {/* Store Total */}
-            <div className="w-full p-3">
-              <h3 className="text-xl font-bold">
-                Store Total: Rp. {storeData.totalPrice.toLocaleString() || "0"}
-              </h3>
+                <p>
+                  Total Base Price: Rp.{" "}
+                  {(
+                    item.totalBasePrice +
+                    optionsTotal * item.quantity
+                  ).toLocaleString()}
+                </p>
+
+                {/* Action buttons */}
+                <div className="flex flex-row items-center justify-start space-x-2 text-xl font-bold">
+                  <button
+                    onClick={() =>
+                      handleQuantityChange(
+                        item.id,
+                        item.productId,
+                        item.quantity - 1
+                      )
+                    }
+                  >
+                    <CiCircleMinus />
+                  </button>
+                  <button
+                    onClick={() =>
+                      handleQuantityChange(
+                        item.id,
+                        item.productId,
+                        item.quantity + 1
+                      )
+                    }
+                  >
+                    <CiCirclePlus />
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Cart Summary */}
-        <button className="p-2 rounded-md bg-purple-600">
-          Checkout Rp. {totalCartPrice.toLocaleString() || "0"}
+        <div className="m-3 rounded bg-zinc-900 p-3">
+          <h3>Cart Summary</h3>
+          <p>Total Price: Rp. {totalCartPrice.toLocaleString()}</p>
+        </div>
+        <button className="p-2 m-2 rounded-md bg-purple-600 sticky bottom-2">
+          Checkout Rp. {totalCartPrice.toLocaleString()}
         </button>
       </div>
     </div>

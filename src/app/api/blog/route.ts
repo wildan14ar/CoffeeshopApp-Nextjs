@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getToken } from "next-auth/jwt";
 
 // GET: Fetch all blogs or by category
 export async function GET(req) {
     try {
         // Extract category from query params
         const category = req.nextUrl.searchParams.get('category');
-        
+
         // Fetch blogs, filter by category if query exists, and select specific fields
         const blogs = await prisma.blogs.findMany({
             where: category ? { category } : {},
@@ -25,11 +26,24 @@ export async function GET(req) {
     }
 }
 
-
 // POST: Create new blog
-export async function POST(request: Request) {
+export async function POST(req) {
+    const secret = process.env.NEXTAUTH_SECRET;  // Retrieve the secret from environment variables
+
+    const token = await getToken({ req, secret });
+
+    if (!token || !token.sub) {
+        return new Response("Unauthorized", { status: 401 });
+    }
+
+    const userRole = token.role;
+
+    if (userRole !== 'MANAGER') {
+        return new Response("Unauthorized", { status: 401 });
+    }
+
     try {
-        const { name, description, image_url, content, category } = await request.json();
+        const { name, description, image_url, content, category } = await req.json();
 
         // Validasi input
         if (!name || !description || !image_url || !content || !category) {
@@ -51,3 +65,4 @@ export async function POST(request: Request) {
         return NextResponse.json({ message: 'Error creating blog', error: error.message }, { status: 500 });
     }
 }
+

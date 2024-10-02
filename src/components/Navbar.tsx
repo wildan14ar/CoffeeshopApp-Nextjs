@@ -9,7 +9,7 @@ export default function Navbar() {
   const isLoggedIn = status === "authenticated";
 
   return (
-    <nav className="sticky bg-white dark:bg-black top-0 w-full py-2 px-3 hidden md:flex flex-row items-center justify-between z-10">
+    <nav className="sticky bg-white dark:bg-black top-0 w-full h-[60px] py-2 px-3 hidden md:flex flex-row items-center justify-between z-10">
       <Link href="/">
         <h1 className="text-3xl font-bold flex flex-row gradient-text">
           Vapmart
@@ -26,7 +26,10 @@ export default function Navbar() {
           <li className="gradient-text">Store</li>
         </Link>
       </ul>
-      <ul className="flex flex-row items-center justify-center gap-3">
+      <ul className="flex flex-row items-center justify-center gap-3 font-bold">
+        <Link href="/cart">
+          <li className="text-2xl">Cart</li>
+        </Link>
         {isLoggedIn ? (
           <Link href="/dashboard">
             <li className="text-2xl">

@@ -1,5 +1,5 @@
 // /app/api/payment/callback/route.js
-import prisma from '@lib/prisma';
+import prisma from '@/lib/prisma';
 
 export async function POST(req) {
     const payload = await req.json();

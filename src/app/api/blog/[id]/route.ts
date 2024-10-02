@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getToken } from "next-auth/jwt";
 
-// GET: Fetch blog by ID
+
 export async function GET(request: Request, { params }: { params: { id: string } }) {
     try {
         const blog = await prisma.blogs.findUnique({
@@ -27,6 +28,20 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
 // PUT: Update blog by ID
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
+    const secret = process.env.NEXTAUTH_SECRET;
+
+    const token = await getToken({ req, secret });
+
+    if (!token || !token.sub) {
+        return new Response("Unauthorized", { status: 401 });
+    }
+
+    const userRole = token.role;
+
+    if (userRole !== 'MANAGER') {
+        return new Response("Unauthorized", { status: 401 });
+    }
+
     try {
         const { name, description, image_url, content, category } = await request.json();
 
@@ -54,6 +69,19 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
 // DELETE: Delete blog by ID
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+    const secret = process.env.NEXTAUTH_SECRET;
+    const token = await getToken({ req, secret });
+
+    if (!token || !token.sub) {
+        return new Response("Unauthorized", { status: 401 });
+    }
+
+    const userRole = token.role;
+
+    if (userRole !== 'MANAGER') {
+        return new Response("Unauthorized", { status: 401 });
+    }
+
     try {
         await prisma.blogs.delete({
             where: { id: params.id },

@@ -2,6 +2,36 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma'; // pastikan ini menuju file Prisma Client-mu
 import bcrypt from 'bcryptjs'; // untuk hashing password
 
+export async function GET() {
+  try {
+    // Fetch all stores with related details, excluding userId
+    const stores = await prisma.store.findMany({
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        address: true,
+        phone: true,
+        email: true,
+        image_url: true,
+        details: {
+          select: {
+            latitude: true,
+            longitude: true,
+            whatsapp: true,
+            instagram: true,
+            facebook: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(stores, { status: 200 });
+  } catch (error) {
+    return NextResponse.json({ error: 'Error fetching stores' }, { status: 500 });
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();

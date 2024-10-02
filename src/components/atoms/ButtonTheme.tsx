@@ -1,19 +1,20 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { FaSun, FaMoon } from "react-icons/fa";
+import { MdDarkMode } from "react-icons/md";
+import { MdLightMode } from "react-icons/md";
 
 // Function to toggle theme with icon
 const ButtonThemeIcon = () => {
   const { theme, setTheme } = useTheme();
 
   return (
-    <li
+    <div
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
       className="text-2xl"
     >
-      {theme === "light" ? <FaMoon /> : <FaSun />}
-    </li>
+      {theme === "light" ? <MdDarkMode /> : <MdLightMode />}
+    </div>
   );
 };
 
@@ -22,12 +23,12 @@ const ButtonThemeBox = () => {
   const { theme, setTheme } = useTheme();
 
   return (
-    <li
+    <div
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-      className="rounded bg-slate-200 p-2 w-full"
+      className="rounded bg-white shadow dark:bg-slate-600  p-2 w-full text-center cursor-pointer"
     >
       {theme === "light" ? <span>Light Mode</span> : <span>Dark Mode</span>}
-    </li>
+    </div>
   );
 };
 

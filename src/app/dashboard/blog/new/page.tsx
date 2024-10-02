@@ -38,11 +38,13 @@ export default function CreateBlog() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-8">
-      <h1 className="text-3xl text-center font-bold mb-8">Tambah Blog</h1>
+    <div className="max-w-4xl mx-auto p-8 bg-white dark:bg-gray-900 rounded-lg shadow-lg transition duration-300">
+      <h1 className="text-3xl text-center font-bold mb-8 text-gray-800 dark:text-gray-100">
+        Tambah Blog
+      </h1>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-lg font-medium text-gray-700 mb-2">
+          <label className="block text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
             Judul
           </label>
           <input
@@ -50,11 +52,11 @@ export default function CreateBlog() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full p-3 border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:focus:ring-indigo-400 dark:focus:border-indigo-400 transition duration-300"
           />
         </div>
         <div>
-          <label className="block text-lg font-medium text-gray-700 mb-2">
+          <label className="block text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
             Deskripsi
           </label>
           <input
@@ -62,43 +64,43 @@ export default function CreateBlog() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required
-            className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full p-3 border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:focus:ring-indigo-400 dark:focus:border-indigo-400 transition duration-300"
           />
         </div>
         <div>
-          <label className="block text-lg font-medium text-gray-700 mb-2">
+          <label className="block text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
             Image
           </label>
           {uploadUrl && (
-            <div>
-              <h3>Uploaded Image</h3>
+            <div className="mb-4">
+              <h3 className="text-gray-700 dark:text-gray-300">Uploaded Image</h3>
               <img
                 src={uploadUrl}
                 alt="Uploaded"
-                style={{ maxWidth: "100px", height: "auto" }}
+                className="max-w-full h-auto rounded-md"
               />
             </div>
           )}
           <Upload onUpload={handleUpload} />
         </div>
         <div>
-          <label className="block text-lg font-medium text-gray-700 mb-2">
+          <label className="block text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
             Konten
           </label>
           <ReactQuill
             value={content}
             onChange={setContent}
-            className="border border-gray-300 rounded-md shadow-sm"
+            className="border border-gray-300 dark:border-gray-700 rounded-md shadow-sm"
           />
         </div>
         <div>
-          <label className="block text-lg font-medium text-gray-700 mb-2">
+          <label className="block text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
             Kategori
           </label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full p-3 border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:focus:ring-indigo-400 dark:focus:border-indigo-400 transition duration-300"
           >
             <option value="News">News</option>
             <option value="Howto">Howto</option>
@@ -107,7 +109,7 @@ export default function CreateBlog() {
         </div>
         <button
           type="submit"
-          className="w-full bg-indigo-600 text-white p-3 rounded-md shadow hover:bg-indigo-700 transition-colors"
+          className="w-full bg-indigo-600 dark:bg-indigo-500 text-white dark:text-gray-100 p-3 rounded-md shadow hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-4 focus:ring-indigo-400 transition duration-300"
         >
           Simpan
         </button>

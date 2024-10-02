@@ -1,4 +1,4 @@
-import { initWebSocket } from '@/lib/websocket';
+
 
 export default function handler(req, res) {
   if (!res.socket.server.io) {

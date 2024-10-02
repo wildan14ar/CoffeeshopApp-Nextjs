@@ -21,7 +21,7 @@ const variants = {
 
 export default function Loader() {
   return (
-    <div className="absolute text-center w-screen h-screen flex justify-center items-center z-50">
+    <div className="absolute z-50  top-0 left-0 text-center w-screen h-screen flex justify-center items-center">
       <motion.div
         transition={{
           staggerChildren: 0.25,

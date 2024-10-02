@@ -7,7 +7,7 @@ export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
     // Daftar rute login yang perlu diakses oleh pengguna yang belum login
-    const loginRoutes = [ '/cart', '/dashboard'];
+    const loginRoutes = [ '/cart', '/dashboard', '/profile'];
     // Cek apakah pathname dimulai dengan salah satu rute login
     const isLoginRoute = loginRoutes.some(route => pathname.startsWith(route));
 
@@ -25,11 +25,7 @@ export async function middleware(req: NextRequest) {
     }
 
     // Cek hak akses untuk rute dashboard
-    if (pathname.startsWith('/dashboard/admin') && token?.role !== 'ADMIN') {
-        return NextResponse.redirect(new URL('/unauthorized', req.url));
-    }
-
-    if (pathname.startsWith('/dashboard/manager') && token?.role !== 'MANAGER') {
+    if (pathname.startsWith('/dashboard') && (token?.role !== 'ADMIN' && token?.role !== 'MANAGER')) {
         return NextResponse.redirect(new URL('/unauthorized', req.url));
     }
 

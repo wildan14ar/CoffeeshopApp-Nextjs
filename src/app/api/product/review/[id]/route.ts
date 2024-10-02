@@ -3,34 +3,40 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma'; // Adjust based on your prisma setup
 
 export async function GET(req, { params }) {
-    try {
+  try {
       const token = await getToken({ req });
       if (!token) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
-  
+
       const userId = token.sub; // Assuming `sub` contains the user ID
-      const productId = parseInt(params.productId, 10);
-  
-      const review = await prisma.reviewProduct.findUnique({
-        where: {
-          userId_productId: {
-            userId,
-            productId,
-          },
-        },
-      });
-  
-      if (!review) {
-        return NextResponse.json({ error: 'Review not found' }, { status: 404 });
+      const productId = parseInt(params.id, 10);
+      
+      // Check if productId is a valid number
+      if (isNaN(productId)) {
+          return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 });
       }
-  
+
+      const review = await prisma.reviewProduct.findUnique({
+          where: {
+              userId_productId: {
+                  userId,
+                  productId,
+              },
+          },
+      });
+
+      if (!review) {
+          return NextResponse.json({ error: 'Review not found' }, { status: 404 });
+      }
+
       return NextResponse.json(review);
-    } catch (error) {
+  } catch (error) {
       console.error(error);
       return NextResponse.json({ error: 'Something went wrong' }, { status: 500 });
-    }
   }
+}
+
 
 // PATCH: Create or update the review or favorite status
 export async function PATCH(req, { params }) {
@@ -41,7 +47,13 @@ export async function PATCH(req, { params }) {
     }
 
     const userId = token.sub; // Assuming `sub` contains the user ID
-    const productId = parseInt(params.productId, 10);
+    const productId = parseInt(params.id, 10);
+
+    // Check if productId is valid
+    if (isNaN(productId)) {
+      return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 });
+    }
+
     const { review, favorite, message } = await req.json();
 
     // Check if the review already exists
@@ -49,7 +61,7 @@ export async function PATCH(req, { params }) {
       where: {
         userId_productId: {
           userId,
-          productId,
+          productId, // Ensure productId is used
         },
       },
     });
@@ -90,3 +102,4 @@ export async function PATCH(req, { params }) {
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 });
   }
 }
+
