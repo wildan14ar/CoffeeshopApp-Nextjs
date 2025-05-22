@@ -2,9 +2,10 @@ import Link from "next/link";
 
 import { FaStoreAlt } from "react-icons/fa";
 import { IoIosStar } from "react-icons/io";
-import { IoHomeSharp, IoCard } from "react-icons/io5";
+import { IoHomeSharp} from "react-icons/io5";
 import { TiShoppingCart } from "react-icons/ti";
 import CartItemCount from "@/components/atoms/CartItemCount";
+import { MdAccountCircle } from "react-icons/md";
 
 export default function Footnav() {
   return (
@@ -21,10 +22,10 @@ export default function Footnav() {
           </li>
         </Link>
 
-        <Link href="/order">
+        <Link href="/profile">
           <li className="text-xl transform transition-transform duration-300 hover:scale-105 flex flex-col justify-center items-center">
-            <IoCard title="Order" />
-            <span className="text-xs">Order</span>
+            <IoIosStar title="Profile" />
+            <span className="text-xs">Reward</span>
           </li>
         </Link>
 
@@ -35,17 +36,17 @@ export default function Footnav() {
           </li>
         </Link>
 
-        <Link href="/profile">
-          <li className="text-xl transform transition-transform duration-300 hover:scale-105 flex flex-col justify-center items-center">
-            <IoIosStar title="Profile" />
-            <span className="text-xs">Reward</span>
-          </li>
-        </Link>
-
         <Link href="/store">
           <li className="text-xl transform transition-transform duration-300 hover:scale-105 flex flex-col justify-center items-center">
             <FaStoreAlt title="Store" />
             <span className="text-xs">Store</span>
+          </li>
+        </Link>
+
+        <Link href="/profile">
+          <li className="text-xl transform transition-transform duration-300 hover:scale-105 flex flex-col justify-center items-center">
+            <MdAccountCircle title="Profile" />
+            <span className="text-xs">Profile</span>
           </li>
         </Link>
       </ul>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
-import Link from "next/link";
+import Image from "next/image";
 
 // Import Swiper styles
 import "swiper/css";
@@ -20,7 +20,7 @@ export default function BannerCarousel() {
         const response = await fetch("/api/blog?category=Programs");
         const data = await response.json();
         // Get only the first 5 items
-        const imageUrls = data.slice(0, 5).map((item) => item.image_url);
+        const imageUrls = data.slice(0, 5).map((item: { image_url: string }) => item.image_url);
         setSlides(imageUrls);
       } catch (error) {
         console.error("Error fetching slides:", error);
@@ -32,12 +32,6 @@ export default function BannerCarousel() {
 
   return (
     <div className="carousel-container w-full max-w-[700px] my-3 px-2 mx-auto">
-      <div className="flex flex-row justify-between my-2">
-        <h4 className="text-sm">Programs and Promotions</h4>
-        <Link href="/blog/program" className="text-sm font-bold text-purple-500">
-          See All
-        </Link>
-      </div>
       <Swiper
         spaceBetween={30}
         slidesPerView={1}
@@ -54,13 +48,13 @@ export default function BannerCarousel() {
         {slides.length > 0 &&
           slides.map((slide, index) => (
             <SwiperSlide key={index}>
-              <div className="w-full h-[180px] sm:h-[330px] lg:h-[380px]">
-                <img
+                <Image
                   src={slide}
                   alt={`Slide ${index + 1}`}
-                  className="w-full h-full object-cover rounded-lg"
+                  layout="fill"
+                  objectFit="cover"
+                  className="rounded-lg"
                 />
-              </div>
             </SwiperSlide>
           ))
         }

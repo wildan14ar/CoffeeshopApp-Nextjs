@@ -1,8 +1,21 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
-export default function NewsList({ int }) {
+interface NewsListProps {
+  int?: number;
+}
+
+interface Blog {
+  id: number;
+  name: string;
+  description: string;
+  image_url: string;
+  int?: number;
+}
+
+export default function NewsList({ int }: NewsListProps) {
   const [blogs, setBlogs] = useState([]);
 
   useEffect(() => {
@@ -13,12 +26,14 @@ export default function NewsList({ int }) {
 
   return (
     <ul className="flex flex-wrap justify-center w-full gap-2">
-      {blogs.slice(0, int || blogs.length).map((blog) => (
+      {blogs.slice(0, int || blogs.length).map((blog: Blog) => (
         <Link href={`/blog/${blog.id}`} key={blog.id}>
-          <li className="w-full max-w-[400px] h-[80px] flex flex-row gap-2 bg-zinc-900 rounded shadow-md">
-            <img
+          <li className="flex flex-row w-full bg-zinc-900 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 items-stretch">
+            <Image
               src={blog.image_url}
               alt={blog.name}
+              width={100}
+              height={80}
               className="w-1/4 h-full object-cover rounded m-[-2]"
             />
             <div className="flex flex-col w-full overflow-hidden p-2">
@@ -37,7 +52,7 @@ export default function NewsList({ int }) {
               >
                 {blog.description}
               </p>
-            </div>
+            </div>          
           </li>
         </Link>
       ))}
