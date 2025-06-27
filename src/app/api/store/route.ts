@@ -13,7 +13,6 @@ export async function GET() {
         address: true,
         phone: true,
         email: true,
-        image_url: true,
         details: {
           select: {
             latitude: true,
@@ -36,7 +35,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const { name, description, address, phone, email, image_url, latitude, longitude, whatsapp, instagram, facebook, userName, userEmail, userPassword } = body;
+    const { name, description, address, phone, email, latitude, longitude, whatsapp, instagram, facebook, userName, userEmail, userPassword } = body;
 
     // Validasi input untuk user
     if (!userName || !userEmail || !userPassword) {
@@ -58,7 +57,7 @@ export async function POST(req: Request) {
     // Buat user baru
     const newUser = await prisma.user.create({
       data: {
-        name: userName,
+        userName: userName,
         email: userEmail,
         hashedPassword,
       },
@@ -72,7 +71,6 @@ export async function POST(req: Request) {
         address,
         phone,
         email,
-        image_url,
         userId: newUser.id, // Gunakan id user yang baru dibuat
         details: {
           create: {

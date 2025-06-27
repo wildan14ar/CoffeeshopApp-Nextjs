@@ -9,8 +9,8 @@ export async function GET() {
       select: {
         id: true,
         name: true,
-        base_price: true,
-        image_url: true,
+        basePrice: true,
+        imageUrl: true,
         store: {
           select: {
             id: true,
@@ -21,7 +21,7 @@ export async function GET() {
     })
 
     // Group products by store
-    const groupedProducts = products.reduce((acc, product) => {
+    const groupedProducts = products.reduce<Record<string, { store: typeof products[0]['store'], products: typeof products }>>((acc, product) => {
       const storeId = product.store.id;
       if (!acc[storeId]) {
         acc[storeId] = {
@@ -44,7 +44,19 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, description, base_price, image_url, options } = body;
+    const { name, description, basePrice, image_url, options }: {
+      name: string;
+      description: string;
+      basePrice: string | number;
+      image_url: string;
+      options: Array<{
+        name: string;
+        values: Array<{
+          value: string;
+          additional_price: string | number;
+        }>;
+      }>;
+    } = body;
 
     // Dapatkan token menggunakan request yang benar
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
@@ -70,8 +82,8 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         description,
-        base_price: parseFloat(base_price),
-        image_url,
+        basePrice: parseFloat(basePrice.toString()),
+        imageUrl: image_url,
         storeId: store.id, // Tambahkan storeId yang ditemukan
         options: {
           create: options.map(option => ({
@@ -79,7 +91,7 @@ export async function POST(request: NextRequest) {
             values: {
               create: option.values.map(value => ({
                 value: value.value,
-                additional_price: parseFloat(value.additional_price),
+                additional_price: parseFloat(value.additional_price.toString()),
               })),
             },
           })),
@@ -97,7 +109,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(product, { status: 201 });
   } catch (error) {
     console.error('Error creating product:', error);
-    return NextResponse.json({ error: 'Error creating product', details: error.message }, { status: 500 });
+    return NextResponse.json(
+      { 
+        error: 'Error creating product', 
+        details: error instanceof Error ? error.message : String(error) 
+      }, 
+      { status: 500 }
+    );
   }
 }
 

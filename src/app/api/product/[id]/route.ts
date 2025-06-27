@@ -5,14 +5,15 @@ import { getToken } from "next-auth/jwt";
 const prisma = new PrismaClient()
 
 // Get Product by ID
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
     try {
         if (!params || !params.id) {
             return NextResponse.json({ error: 'Invalid parameters' }, { status: 400 });
         }
 
         const product = await prisma.product.findUnique({
-            where: { id: parseInt(params.id, 10) },
+            where: { id: params.id },
             include: {
                 options: {
                     include: {
@@ -35,7 +36,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
 
 // Update Product
-export async function PUT(request: NextRequest, { params }) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
     try {
         const body = await request.json();
         const { name, description, base_price, image_url, options } = body;
@@ -62,7 +64,7 @@ export async function PUT(request: NextRequest, { params }) {
         // Pastikan produk tersebut milik store yang sesuai
         const product = await prisma.product.findFirst({
             where: {
-                id: parseInt(params.id),
+                id: params.id,
                 storeId: store.id, // Pastikan produk milik store yang sesuai
             },
         });
@@ -77,8 +79,8 @@ export async function PUT(request: NextRequest, { params }) {
             data: {
                 name,
                 description,
-                base_price: parseFloat(base_price),
-                image_url,
+                basePrice: parseFloat(base_price),
+                imageUrl: image_url,
             },
         });
 
@@ -91,9 +93,19 @@ export async function PUT(request: NextRequest, { params }) {
             where: { productId: product.id },
         });
 
+        // Define types for option and value
+        interface OptionValue {
+            value: string;
+            additional_price: string | number;
+        }
+        interface Option {
+            name: string;
+            values: OptionValue[];
+        }
+
         // Create new options and values
         await Promise.all(
-            options.map(async (option) => {
+            (options as Option[]).map(async (option: Option) => {
                 await prisma.productOption.create({
                     data: {
                         name: option.name,
@@ -101,7 +113,7 @@ export async function PUT(request: NextRequest, { params }) {
                         values: {
                             create: option.values.map((value) => ({
                                 value: value.value,
-                                additional_price: parseFloat(value.additional_price),
+                                additional_price: parseFloat(value.additional_price as string),
                             })),
                         },
                     },
@@ -118,13 +130,17 @@ export async function PUT(request: NextRequest, { params }) {
         return NextResponse.json(updatedProduct);
     } catch (error) {
         console.error("Error:", error);
-        return NextResponse.json({ error: 'Error updating product', details: error.message }, { status: 500 });
+        const errorMessage = typeof error === 'object' && error !== null && 'message' in error
+            ? (error as { message: string }).message
+            : String(error);
+        return NextResponse.json({ error: 'Error updating product', details: errorMessage }, { status: 500 });
     }
 }
 
 
 // Delete Product
-export async function DELETE(request, { params }) {
+export async function DELETE(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
     try {
         // Dapatkan token menggunakan request yang benar
         const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
@@ -148,7 +164,7 @@ export async function DELETE(request, { params }) {
         // Pastikan produk tersebut milik store yang sesuai
         const product = await prisma.product.findFirst({
             where: {
-                id: parseInt(params.id),
+                id: params.id,
                 storeId: store.id, // Pastikan produk milik store yang sesuai
             },
         });
@@ -165,6 +181,9 @@ export async function DELETE(request, { params }) {
         return new NextResponse(null, { status: 204 });
     } catch (error) {
         console.error("Error deleting product:", error);
-        return NextResponse.json({ error: 'Error deleting product', details: error.message }, { status: 500 });
+        const errorMessage = typeof error === 'object' && error !== null && 'message' in error
+            ? (error as { message: string }).message
+            : String(error);
+        return NextResponse.json({ error: 'Error deleting product', details: errorMessage }, { status: 500 });
     }
 }

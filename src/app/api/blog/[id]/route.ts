@@ -1,94 +1,105 @@
+// app/api/blogs/[id]/route.ts
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getToken } from "next-auth/jwt";
+import { getToken } from 'next-auth/jwt';
 
+const SECRET = process.env.NEXTAUTH_SECRET;
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
-    try {
-        const blog = await prisma.blogs.findUnique({
-            where: { id: params.id },
-            select: {
-                name: true,
-                image_url: true,
-                content: true,
-                description: true, // Corrected field
-                category: true,
-            },
-        });
-
-        if (!blog) {
-            return NextResponse.json({ message: 'Blog not found' }, { status: 404 });
+// GET: Retrieve a single blog by ID
+export async function GET({ params }: { params: { id: string } }) {
+  try {
+    const { id } = params;
+    const blog = await prisma.blogs.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        imageUrl: true,
+        content: true,
+        categories: {
+          select: { category: { select: { name: true } } }
         }
-
-        return NextResponse.json(blog);
-    } catch (error) {
-        return NextResponse.json({ message: 'Error fetching blog', error: error.message }, { status: 500 });
+      }
+    });
+    if (!blog) {
+      return NextResponse.json({ message: 'Blog not found' }, { status: 404 });
     }
+
+    return NextResponse.json({
+      ...blog,
+      categories: blog.categories.map(c => c.category.name)
+    });
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ message: 'Error fetching blog', error: errMsg }, { status: 500 });
+  }
 }
 
-// PUT: Update blog by ID
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
-    const secret = process.env.NEXTAUTH_SECRET;
+// PUT: Update blog (MANAGER only)
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  // Authentication
+  const token = await getToken({ req, secret: SECRET });
+  if (!token?.sub || token.role !== 'MANAGER') {
+    return new NextResponse('Unauthorized', { status: 401 });
+  }
 
-    const token = await getToken({ req, secret });
+  try {
+    const { id } = params;
+    const { title, description, imageUrl, content, categoryIds } = await req.json();
 
-    if (!token || !token.sub) {
-        return new Response("Unauthorized", { status: 401 });
+    if (!title || !description || !imageUrl || !content || !Array.isArray(categoryIds) || !categoryIds.length) {
+      return NextResponse.json({ message: 'All fields and at least one categoryId are required' }, { status: 400 });
     }
 
-    const userRole = token.role;
-
-    if (userRole !== 'MANAGER') {
-        return new Response("Unauthorized", { status: 401 });
-    }
-
-    try {
-        const { name, description, image_url, content, category } = await request.json();
-
-        // Validasi input
-        if (!name || !description || !image_url || !content || !category) {
-            return NextResponse.json({ message: 'All fields are required' }, { status: 400 });
+    const updated = await prisma.blogs.update({
+      where: { id },
+      data: {
+        title,
+        description,
+        imageUrl,
+        content,
+        categories: {
+          // replace old categories with new list
+          deleteMany: {},
+          create: categoryIds.map(cid => ({ category: { connect: { id: cid } } }))
         }
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        imageUrl: true,
+        content: true,
+        categories: { select: { category: { select: { name: true } } } }
+      }
+    });
 
-        const updatedBlog = await prisma.blogs.update({
-            where: { id: params.id },
-            data: {
-                name,
-                description,
-                image_url,
-                content,
-                category,
-            },
-        });
-
-        return NextResponse.json(updatedBlog);
-    } catch (error) {
-        return NextResponse.json({ message: 'Error updating blog', error: error.message }, { status: 500 });
-    }
+    return NextResponse.json({
+      ...updated,
+      categories: updated.categories.map(c => c.category.name)
+    });
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ message: 'Error updating blog', error: errMsg }, { status: 500 });
+  }
 }
 
-// DELETE: Delete blog by ID
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
-    const secret = process.env.NEXTAUTH_SECRET;
-    const token = await getToken({ req, secret });
+// DELETE: Remove blog (MANAGER only)
+import { NextRequest } from 'next/server';
 
-    if (!token || !token.sub) {
-        return new Response("Unauthorized", { status: 401 });
-    }
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  const token = await getToken({ req, secret: SECRET });
+  if (!token?.sub || token.role !== 'MANAGER') {
+    return new NextResponse('Unauthorized', { status: 401 });
+  }
 
-    const userRole = token.role;
-
-    if (userRole !== 'MANAGER') {
-        return new Response("Unauthorized", { status: 401 });
-    }
-
-    try {
-        await prisma.blogs.delete({
-            where: { id: params.id },
-        });
-
-        return NextResponse.json({ message: 'Blog deleted' });
-    } catch (error) {
-        return NextResponse.json({ message: 'Error deleting blog', error: error.message }, { status: 500 });
-    }
+  try {
+    const { id } = params;
+    await prisma.blogs.delete({ where: { id } });
+    return NextResponse.json({ message: 'Blog deleted' });
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ message: 'Error deleting blog', error: errMsg }, { status: 500 });
+  }
 }

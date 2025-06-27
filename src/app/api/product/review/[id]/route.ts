@@ -1,15 +1,19 @@
 import { getToken } from 'next-auth/jwt';
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/lib/prisma'; // Adjust based on your prisma setup
 
-export async function GET(req, { params }) {
+export async function GET(req: NextRequest, props: { params: { id: string } }) {
+  const params = await props.params;
   try {
       const token = await getToken({ req });
       if (!token) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
-      const userId = token.sub; // Assuming `sub` contains the user ID
+      const userId = token.sub;
+      if (!userId) {
+          return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });
+      }
       const productId = parseInt(params.id, 10);
       
       // Check if productId is a valid number
@@ -21,7 +25,7 @@ export async function GET(req, { params }) {
           where: {
               userId_productId: {
                   userId,
-                  productId,
+                  productId: productId.toString(),
               },
           },
       });
@@ -39,29 +43,35 @@ export async function GET(req, { params }) {
 
 
 // PATCH: Create or update the review or favorite status
-export async function PATCH(req, { params }) {
+export async function PATCH(req: NextRequest, props: { params: { id: string } }) {
+  const params = await props.params;
   try {
     const token = await getToken({ req });
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const userId = token.sub; // Assuming `sub` contains the user ID
+    const userId = token.sub;
+    if (!userId) {
+      return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });
+    }
     const productId = parseInt(params.id, 10);
 
     // Check if productId is valid
     if (isNaN(productId)) {
       return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 });
     }
+    if (isNaN(productId)) {
+      return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 });
+    }
 
-    const { review, favorite, message } = await req.json();
+    const { favorite, message } = await req.json();
 
     // Check if the review already exists
     const existingReview = await prisma.reviewProduct.findUnique({
       where: {
         userId_productId: {
           userId,
-          productId, // Ensure productId is used
+          productId: productId.toString(), // Ensure productId is a string
         },
       },
     });
@@ -72,11 +82,10 @@ export async function PATCH(req, { params }) {
         where: {
           userId_productId: {
             userId,
-            productId,
+            productId: productId.toString(), // Ensure productId is a string
           },
         },
         data: {
-          review: review !== undefined ? review : existingReview.review,
           favorite: favorite !== undefined ? favorite : existingReview.favorite,
           message: message !== undefined ? message : existingReview.message,
         },
@@ -88,8 +97,7 @@ export async function PATCH(req, { params }) {
       const newReview = await prisma.reviewProduct.create({
         data: {
           userId,
-          productId,
-          review: review !== undefined ? review : 0, // Default value if not provided
+          productId: productId.toString(),
           favorite: favorite !== undefined ? favorite : false, // Default value if not provided
           message: message || null, // Optional message
         },

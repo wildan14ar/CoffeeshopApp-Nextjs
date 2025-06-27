@@ -12,7 +12,7 @@ import Footnav from "@/components/Footnav";
 // Provider and More
 import { ThemeProvider } from "@/components/theme-provider";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
-import ValidationAge from "@/components/ValidationAge";
+// import ValidationAge from "@/components/ValidationAge";
 import { usePathname } from "next/navigation";
 import { Provider } from "react-redux";
 import store from "./store";
@@ -53,7 +53,7 @@ export default function RootLayout({
     (pathname.startsWith("/product/") && pathname !== "/product");
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <title>Vapmart</title>
         <link rel="shortcut icon" href="/logo.png" type="image/x-icon" />
@@ -70,11 +70,11 @@ export default function RootLayout({
           >
             <div className="flex flex-col">
               <SessionProviderWrapper>
-                <ValidationAge>
+                {/* <ValidationAge> */}
                   {!shouldDisableNavbar && <Navbar />}
                   <div className="min-h-screen">{children}</div>
                   {!shouldDisableFootnav && <Footnav />}
-                </ValidationAge>
+                {/* </ValidationAge> */}
               </SessionProviderWrapper>
             </div>
           </ThemeProvider>

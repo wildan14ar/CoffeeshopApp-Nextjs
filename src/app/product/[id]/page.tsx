@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import Image from "next/image";
 import { FaCircleMinus, FaCirclePlus } from "react-icons/fa6";
 import Loader from "@/components/atoms/Loader";
 import { BackButtonX } from "@/components/atoms/ButtonBack";
 import FavoriteProduct from "@/components/atoms/FavoriteProduct";
 
-export default function ProductPage({ params }) {
+export default function ProductPage(props) {
+  const params = use(props.params);
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState({});
